@@ -277,12 +277,15 @@ function buildBootHtml() {
 }
 const BOOT = {
   dur: 6,
-  enter() { ov.innerHTML = buildBootHtml(); },
+  enter() {
+    ov.innerHTML = buildBootHtml();
+    this.rows = Array.from(ov.querySelectorAll('[data-at]'));
+  },
   render(t) {
     // draw nothing on canvas; clear once.
     ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
     // Reveal each row
-    ov.querySelectorAll('[data-at]').forEach((el) => {
+    this.rows.forEach((el) => {
       const at = parseFloat(el.dataset.at) * 0.55;
       el.style.opacity = t > at ? '1' : '0';
     });
@@ -304,6 +307,16 @@ const TITLE = {
         <div id="tt-sub" style="position:absolute;bottom:198px;font-family:var(--ft);font-size:38px;letter-spacing:.4em;color:var(--ink-3);opacity:0">. a s m</div>
         <div id="tt-meta" style="position:absolute;bottom:156px;font-family:var(--fm);font-size:11px;letter-spacing:.4em;color:var(--am);text-transform:uppercase;opacity:0">a 64k intro · pip install ${b('buffalo')}-ipsum</div>
       </div>`;
+    this.elBig  = document.getElementById('tt-big');
+    this.elMg   = document.getElementById('tt-mg');
+    this.elCy   = document.getElementById('tt-cy');
+    this.elPres = document.getElementById('tt-pres');
+    this.elSub  = document.getElementById('tt-sub');
+    this.elMeta = document.getElementById('tt-meta');
+    this.plasmaGrad = ctx.createLinearGradient(132, 0, W - 132, 0);
+    this.plasmaGrad.addColorStop(0, '#00e5ff');
+    this.plasmaGrad.addColorStop(0.5, '#ff2bd6');
+    this.plasmaGrad.addColorStop(1, '#ffb020');
   },
   render(t, _dt) {
     // burst on canvas: copper bars sweep in, plasma bar across middle
@@ -313,7 +326,6 @@ const TITLE = {
 
     // copper bar function
     const drawCopper = (x0, w) => {
-      const g = ctx.createLinearGradient(0, 0, 0, 16);
       // build repeating pattern via direct fillRects
       for (let y = 120 + osc; y < H - 120 - osc; y += 18) {
         ctx.fillStyle = '#00e5ff'; ctx.fillRect(x0, y, w, 4);
@@ -327,31 +339,26 @@ const TITLE = {
     drawCopper(rightX, 132);
 
     // plasma bar middle
-    const bar = ctx.createLinearGradient(132, 0, W - 132, 0);
-    bar.addColorStop(0, '#00e5ff');
-    bar.addColorStop(0.5, '#ff2bd6');
-    bar.addColorStop(1, '#ffb020');
-    ctx.fillStyle = bar;
+    ctx.fillStyle = this.plasmaGrad;
     const y0 = H/2 - 3 + Math.sin(t * 1.8) * 3;
     ctx.fillRect(132, y0, W - 264, 6);
 
     // burst scale on the lead text
-    const tt = document.getElementById('tt-big');
-    if (tt) {
+    if (this.elBig) {
       const burst = t < 0.45 ? 1.3 - 0.3 * (t / 0.45) : 1.0 + 0.05 * Math.sin(((t - 0.45) / 0.15) * Math.PI);
-      tt.style.transform = `scale(${burst})`;
+      this.elBig.style.transform = `scale(${burst})`;
     }
     // chromatic offsets
     const dx = 4 + Math.sin(t * 4) * 2;
-    const mg = document.getElementById('tt-mg');
-    const cy = document.getElementById('tt-cy');
-    if (mg) mg.style.transform = `translate(${dx}px, 2px)`;
-    if (cy) cy.style.transform = `translate(${-dx}px, -2px)`;
+    if (this.elMg) this.elMg.style.transform = `translate(${dx}px, 2px)`;
+    if (this.elCy) this.elCy.style.transform = `translate(${-dx}px, -2px)`;
 
     // fade-ins
     const show = (t - 0.8) / 0.4;
     const op = Math.max(0, Math.min(1, show));
-    ['tt-pres','tt-sub','tt-meta'].forEach(id => { const el = document.getElementById(id); if (el) el.style.opacity = op; });
+    if (this.elPres) this.elPres.style.opacity = op;
+    if (this.elSub)  this.elSub.style.opacity  = op;
+    if (this.elMeta) this.elMeta.style.opacity  = op;
   }
 };
 
@@ -373,6 +380,9 @@ const SENTENCE = {
           <div><span style="color:var(--mg);text-shadow:0 0 6px rgba(255,43,214,.5)">buffalo</span> <span style="color:var(--ink-1)">· to bully</span></div>
         </div>
       </div>`;
+    this.words = Array.from(ov.querySelectorAll('#snt span[data-w]'));
+    this.elLeg = document.getElementById('snt-leg');
+    this.colors = { T: ['var(--tl)', '0 0 8px rgba(63,211,196,.6)'], v: ['var(--mg)', '0 0 8px rgba(255,43,214,.6)'], l: ['var(--ink-3)', 'none'] };
   },
   render(t) {
     // dim starfield
@@ -381,16 +391,15 @@ const SENTENCE = {
 
     const step = 0.42;
     const n = Math.min(8, Math.floor(t / step) + 1);
-    const colors = { T: ['var(--tl)', '0 0 8px rgba(63,211,196,.6)'], v: ['var(--mg)', '0 0 8px rgba(255,43,214,.6)'], l: ['var(--ink-3)', 'none'] };
-    document.querySelectorAll('#snt span[data-w]').forEach((el, i) => {
+    const colors = this.colors;
+    this.words.forEach((el, i) => {
       if (i < n) {
         el.style.opacity = '1';
         const [c, g] = colors[el.dataset.w];
         el.style.color = c; el.style.textShadow = g;
       }
     });
-    const leg = document.getElementById('snt-leg');
-    if (leg) leg.style.opacity = t > 4 ? Math.min(1, (t - 4) / 0.8) : 0;
+    if (this.elLeg) this.elLeg.style.opacity = t > 4 ? Math.min(1, (t - 4) / 0.8) : 0;
   }
 };
 
@@ -426,6 +435,7 @@ const PART = {
     }));
     this.phaseT = -1;
   },
+  cols: ['#00e5ff','#ff2bd6','#ffb020'],
   enter() {
     this.init();
     ov.innerHTML = `<div class="ov-caption">scene · iii · particles · ${b('buffalo')} · click ${b('buffalo')} to install</div>`;
@@ -445,8 +455,7 @@ const PART = {
     }
     // fade trail
     ctx.fillStyle = 'rgba(6,8,13,.30)'; ctx.fillRect(0,0,W,H);
-    const cols = ['#00e5ff','#ff2bd6','#ffb020'];
-    const c = cols[phase];
+    const c = this.cols[phase];
     ctx.fillStyle = c;
     for (let i = 0; i < this.parts.length; i++) {
       const p = this.parts[i];
@@ -456,12 +465,13 @@ const PART = {
       ctx.fillRect(p.x | 0, p.y | 0, 2, 2);
     }
     // soft halo pass
+    ctx.save();
     ctx.globalAlpha = 0.25;
     for (let i = 0; i < this.parts.length; i++) {
       const p = this.parts[i];
       ctx.fillRect((p.x | 0) - 1, (p.y | 0) - 1, 4, 4);
     }
-    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 };
 
@@ -477,6 +487,12 @@ const PLASMA = {
         <div id="pl-echo1" style="position:absolute;left:0;right:0;font-family:var(--fd);font-size:144px;letter-spacing:.04em;opacity:.13;mix-blend-mode:screen">${b('BUFFALO')}</div>
         <div id="pl-lead" style="position:relative;font-family:var(--fd);font-size:144px;letter-spacing:.04em;line-height:1">${b('BUFFALO')}</div>
       </div>`;
+    this.elLead  = document.getElementById('pl-lead');
+    this.elEcho1 = document.getElementById('pl-echo1');
+    this.elEcho2 = document.getElementById('pl-echo2');
+    this.elEcho3 = document.getElementById('pl-echo3');
+    this.grad = ctx.createLinearGradient(-W/2 + 96, 0, W/2 - 96, 0);
+    this.grad.addColorStop(0, '#00e5ff'); this.grad.addColorStop(.5, '#ff2bd6'); this.grad.addColorStop(1, '#ffb020');
   },
   render(t) {
     // animated copper sides + plasma bar middle
@@ -498,9 +514,7 @@ const PLASMA = {
     ctx.save();
     ctx.translate(W/2, H/2);
     ctx.transform(1, 0, Math.sin(t * 1.4) * 0.08, 1, 0, 0);
-    const grad = ctx.createLinearGradient(-W/2 + 96, 0, W/2 - 96, 0);
-    grad.addColorStop(0, '#00e5ff'); grad.addColorStop(.5, '#ff2bd6'); grad.addColorStop(1, '#ffb020');
-    ctx.fillStyle = grad;
+    ctx.fillStyle = this.grad;
     ctx.globalAlpha = 0.45;
     ctx.fillRect(-W/2 + 96, -8, W - 192, 16);
     ctx.globalAlpha = 1;
@@ -509,11 +523,10 @@ const PLASMA = {
     // strobing word colors
     const phase = Math.floor((t * 6) % 3);
     const cols = ['#00e5ff','#ff2bd6','#ffb020'];
-    const lead = document.getElementById('pl-lead');
-    if (lead) { lead.style.color = cols[phase]; lead.style.textShadow = `0 0 14px ${cols[phase]}, 0 0 36px ${cols[phase]}80`; }
-    const eA = document.getElementById('pl-echo1'); if (eA) eA.style.color = cols[(phase+1)%3];
-    const eB = document.getElementById('pl-echo2'); if (eB) eB.style.color = cols[(phase+2)%3];
-    const eC = document.getElementById('pl-echo3'); if (eC) eC.style.color = cols[phase];
+    if (this.elLead) { this.elLead.style.color = cols[phase]; this.elLead.style.textShadow = `0 0 14px ${cols[phase]}, 0 0 36px ${cols[phase]}80`; }
+    if (this.elEcho1) this.elEcho1.style.color = cols[(phase+1)%3];
+    if (this.elEcho2) this.elEcho2.style.color = cols[(phase+2)%3];
+    if (this.elEcho3) this.elEcho3.style.color = cols[phase];
   }
 };
 
@@ -543,6 +556,10 @@ const VECTORS = {
       }
     }
     this.pts = pts;
+    this.projX = new Float32Array(pts.length);
+    this.projY = new Float32Array(pts.length);
+    this.projZ = new Float32Array(pts.length);
+    this.projIdx = Array.from({length: pts.length}, (_, i) => i);
 
     // pre-render ball sprite once
     const r = 36;
@@ -573,26 +590,26 @@ const VECTORS = {
     const cosZ = Math.cos(rz), sinZ = Math.sin(rz);
     const camZ = 620;
 
-    // project + sort back-to-front
-    const proj = this.pts.map(p => {
-      // rotate Z (roll) first, then Y, then X
+    // project into flat typed arrays, then sort indices back-to-front
+    for (let i = 0; i < this.pts.length; i++) {
+      const p = this.pts[i];
       const rxz = p.x * cosZ - p.y * sinZ;
       const ryz = p.x * sinZ + p.y * cosZ;
       const x1 = rxz * cosY - p.z * sinY;
       const z1 = rxz * sinY + p.z * cosY;
-      const y2 = ryz * cosX - z1 * sinX;
-      const z2 = ryz * sinX + z1 * cosX;
-      return { x: x1, y: y2, z: z2 };
-    });
-    proj.sort((a, b) => b.z - a.z);
+      this.projX[i] = x1;
+      this.projY[i] = ryz * cosX - z1 * sinX;
+      this.projZ[i] = ryz * sinX + z1 * cosX;
+    }
+    const pZ = this.projZ;
+    this.projIdx.sort((a, b) => pZ[b] - pZ[a]);
 
-    for (const p of proj) {
-      const persp = camZ / (camZ + p.z);
-      const px = cx + p.x * persp;
-      const py = cy + p.y * persp;
+    for (let j = 0; j < this.projIdx.length; j++) {
+      const i = this.projIdx[j];
+      const persp = camZ / (camZ + pZ[i]);
+      const px = cx + this.projX[i] * persp;
+      const py = cy + this.projY[i] * persp;
       const size = 56 * persp;
-      // alpha purely on perspective — nearer balls are brighter, far balls dim
-      // but never invisible. Range ~ 0.35 (back) → 1.0 (front).
       ctx.globalAlpha = Math.max(0.35, Math.min(1, persp * 0.95));
       ctx.drawImage(this.sprite, px - size/2, py - size/2, size, size);
     }
@@ -616,33 +633,37 @@ const TUNNEL = {
       <div id="tu-center" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:auto">
         <div id="tu-word" style="font-family:var(--fd);font-size:56px;letter-spacing:.1em;color:#f0f6ff;text-shadow:0 0 16px rgba(255,255,255,.7),0 0 36px rgba(0,229,255,.6);line-height:1">${b('BUFFALO')}</div>
       </div>`;
+    this.elWord = document.getElementById('tu-word');
   },
   render(t) {
     ctx.fillStyle = 'rgba(6,8,13,.28)'; ctx.fillRect(0,0,W,H);
     const cx = W/2, cy = H/2;
     const camZ = (t * 6) % 0.5;
     const roll = t * 0.4;
-    for (let i = this.rings.length - 1; i >= 0; i--) {
-      const r = this.rings[i];
-      const zRel = r.z - camZ;
-      if (zRel <= 0.05) continue;
-      const persp = 1 / zRel;
-      const projR = r.r * persp * 0.8;
-      if (projR > W * 0.9) continue;
-      const alpha = Math.min(1, persp * 0.5);
-      ctx.fillStyle = r.c;
-      for (let d = 0; d < 32; d++) {
-        const ang = (d / 32) * Math.PI * 2 + roll + r.ph;
-        const x = cx + Math.cos(ang) * projR;
-        const y = cy + Math.sin(ang) * projR * 0.62;
-        const sz = Math.max(1, persp * 3.2);
-        ctx.globalAlpha = alpha * 0.25; ctx.fillRect(x - sz * 1.5, y - sz * 1.5, sz * 3, sz * 3);
-        ctx.globalAlpha = alpha; ctx.fillRect(x - sz/2, y - sz/2, sz, sz);
+    // Two-pass render: halo pass then core pass — one globalAlpha write per ring instead of per dot
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = this.rings.length - 1; i >= 0; i--) {
+        const r = this.rings[i];
+        const zRel = r.z - camZ;
+        if (zRel <= 0.05) continue;
+        const persp = 1 / zRel;
+        const projR = r.r * persp * 0.8;
+        if (projR > W * 0.9) continue;
+        const alpha = Math.min(1, persp * 0.5);
+        ctx.fillStyle = r.c;
+        ctx.globalAlpha = pass === 0 ? alpha * 0.25 : alpha;
+        for (let d = 0; d < 32; d++) {
+          const ang = (d / 32) * Math.PI * 2 + roll + r.ph;
+          const x = cx + Math.cos(ang) * projR;
+          const y = cy + Math.sin(ang) * projR * 0.62;
+          const sz = Math.max(1, persp * 3.2);
+          if (pass === 0) ctx.fillRect(x - sz * 1.5, y - sz * 1.5, sz * 3, sz * 3);
+          else            ctx.fillRect(x - sz/2, y - sz/2, sz, sz);
+        }
       }
     }
     ctx.globalAlpha = 1;
-    const word = document.getElementById('tu-word');
-    if (word) word.style.transform = `scale(${0.94 + 0.06 * Math.sin(t * 2.2)})`;
+    if (this.elWord) this.elWord.style.transform = `scale(${0.94 + 0.06 * Math.sin(t * 2.2)})`;
   }
 };
 
@@ -677,6 +698,24 @@ const WAVES = {
     this.tmp = document.createElement('canvas');
     this.tmp.width = this.GW; this.tmp.height = this.GH;
     this.tmpCtx = this.tmp.getContext('2d');
+    // precompute colormap lookup table
+    const CLAMP = 28;
+    this.lut = new Uint8Array(512 * 4);
+    for (let vi = 0; vi < 512; vi++) {
+      const v = vi - 256;
+      const a = Math.min(1, Math.abs(v) / CLAMP);
+      const lp = vi * 4;
+      if (v >= 0) {
+        this.lut[lp]   = 0;
+        this.lut[lp+1] = (a * 229) | 0;
+        this.lut[lp+2] = (a * 255) | 0;
+      } else {
+        this.lut[lp]   = (a * 255) | 0;
+        this.lut[lp+1] = (a * 43)  | 0;
+        this.lut[lp+2] = (a * 214) | 0;
+      }
+      this.lut[lp+3] = 255;
+    }
   },
   enter() { this.init(); ov.innerHTML = `<div class="ov-caption">scene · viii · wave buffer · ${b('buffalo')} · ${b('buffalo')} · ${b('buffalo')}</div>`; },
   render(t) {
@@ -707,20 +746,22 @@ const WAVES = {
     // swap
     this.cur = prv; this.prv = cur;
 
-    // render to ImageData — two-tone height map
+    // render to ImageData — LUT-accelerated two-tone height map
     const data = this.img.data;
     const fld = this.prv;
     for (let i = 0, p = 0; i < WW * HH; i++, p += 4) {
-      const v = fld[i];
-      const a = Math.min(1, Math.abs(v) / 28);
-      if (v >= 0) { data[p] = (a*0) | 0; data[p+1] = (a*229) | 0; data[p+2] = (a*255) | 0; }
-      else        { data[p] = (a*255) | 0; data[p+1] = (a*43) | 0;  data[p+2] = (a*214) | 0; }
+      const vi = Math.min(255, Math.max(-255, fld[i] | 0)) + 256;
+      const lp = vi * 4;
+      data[p]   = this.lut[lp];
+      data[p+1] = this.lut[lp+1];
+      data[p+2] = this.lut[lp+2];
       data[p+3] = 255;
     }
     this.tmpCtx.putImageData(this.img, 0, 0);
+    ctx.save();
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.tmp, 0, 0, W, H);
-    ctx.imageSmoothingEnabled = true;
+    ctx.restore();
   }
 };
 
@@ -730,29 +771,51 @@ const SCROLLER = {
   enter() {
     ov.innerHTML = `
       <div class="ov-caption" style="bottom:144px">scene · ix · scroller iii · sine · ${b('buffalo')}</div>`;
+    this.topText  = '· buffalo · buffalo · buffalo · buffalo · buffalo · buffalo · ';
+    this.btmText  = '◆ greetings to buffalo, buffalo, BUFFALO & buffalo ◆ greetings to buffalo, buffalo, BUFFALO & buffalo ';
+    this.sineText = 'BUFFALO  buffalo  BUFFALO  buffalo  Buffalo  buffalo  BUFFALO  ';
+    ctx.font = '20px "Press Start 2P", monospace';
+    this.topW = ctx.measureText(this.topText).width;
+    ctx.font = '26px "Press Start 2P", monospace';
+    this.btmW = ctx.measureText(this.btmText).width;
+    ctx.font = '72px "Press Start 2P", monospace';
+    this.sineCharW = ctx.measureText('M').width * (1 + 0.06);
   },
   render(t) {
     ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
 
     // top lane — small amber, fast, right→left
-    drawScrollLane('· buffalo · buffalo · buffalo · buffalo · buffalo · buffalo · ',
-                   170, 20, '#ffb020', t, 120, -1, 0, 0);
-    // mid lane — big cyan, sine wobble per character
-    drawSineLane('BUFFALO  buffalo  BUFFALO  buffalo  Buffalo  buffalo  BUFFALO  ',
-                 360, 72, '#00e5ff', t, 70, 36, 1.6);
+    drawScrollLane(this.topText, 170, 20, '#ffb020', t, 120, -1, 0, 0, this.topW);
+    // mid lane — big cyan, sine wobble per character (inlined for cached charW)
+    {
+      const text = this.sineText, speed = 70, amp = 36, freq = 1.6, charW = this.sineCharW;
+      ctx.font = '72px "Press Start 2P", monospace';
+      ctx.fillStyle = '#00e5ff';
+      ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 10;
+      const baseX = -((t * speed) % (W * 2));
+      let x = baseX;
+      for (let pass = 0; pass < 6; pass++) {
+        for (let i = 0; i < text.length; i++) {
+          const phase = (i + pass * text.length) * 0.18;
+          ctx.fillText(text[i], x, 360 + Math.sin(t * freq + phase) * amp);
+          x += charW;
+          if (x > W + 100) break;
+        }
+        if (x > W + 100) break;
+      }
+      ctx.shadowBlur = 0;
+    }
     // bottom lane — magenta, slower
-    drawScrollLane('◆ greetings to buffalo, buffalo, BUFFALO & buffalo ◆ greetings to buffalo, buffalo, BUFFALO & buffalo ',
-                   520, 26, '#ff2bd6', t, 50, 1, 0, 0);
+    drawScrollLane(this.btmText, 520, 26, '#ff2bd6', t, 50, 1, 0, 0, this.btmW);
   }
 };
 
-function drawScrollLane(text, y, fontSize, color, t, speed, dir, _amp, _freq) {
+function drawScrollLane(text, y, fontSize, color, t, speed, dir, _amp, _freq, preW) {
   ctx.font = `${fontSize}px "Press Start 2P", monospace`;
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = color;
   ctx.shadowColor = color; ctx.shadowBlur = 8;
-  const m = ctx.measureText(text);
-  const w = m.width;
+  const w = preW !== undefined ? preW : ctx.measureText(text).width;
   const repeats = Math.ceil(W / w) + 2;
   let x = dir < 0 ? -(t * speed) % w : ((t * speed) % w) - w;
   for (let i = 0; i < repeats; i++) { ctx.fillText(text, x + i * w, y); }
@@ -826,16 +889,16 @@ const CREDITS = {
         <div style="position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(180deg,var(--void-0),transparent);pointer-events:none"></div>
         <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(0deg,var(--void-0),transparent);pointer-events:none"></div>
       </div>`;
+    this.elList = document.getElementById('cr-list');
   },
   render(t) {
     ctx.drawImage(stars, 0, 0);
     ctx.fillStyle = 'rgba(11,15,24,.7)'; ctx.fillRect(0,0,W,H);
-    const list = document.getElementById('cr-list');
-    if (list) {
-      const total = list.scrollHeight;
+    if (this.elList) {
+      const total = this.elList.scrollHeight;
       const travel = total + H;
       const k = Math.min(1, t / (CREDITS.dur - 0.4));
-      list.style.transform = `translateY(${H - travel * k}px)`;
+      this.elList.style.transform = `translateY(${H - travel * k}px)`;
     }
   }
 };
@@ -854,16 +917,21 @@ const END = {
           press R to replay · or click anywhere
         </div>
       </div>`;
+    this.elBig = document.getElementById('en-big');
+    this.elPre = document.getElementById('en-pre');
   },
   render(t) {
     ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
-    ctx.globalAlpha = 0.2; ctx.drawImage(stars, 0, 0); ctx.globalAlpha = 1;
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    ctx.drawImage(stars, 0, 0);
+    ctx.restore();
     const fadeIn = Math.min(1, t / 1.2);
     const fadeOut = END.dur - t < 0.8 ? Math.max(0, (END.dur - t) / 0.8) : 1;
     const flick = t > 2 && Math.sin(t * 6) > 0.92 ? 0.6 : 1;
     const op = fadeIn * fadeOut * flick;
-    const big = document.getElementById('en-big'); if (big) big.style.opacity = op;
-    const pre = document.getElementById('en-pre'); if (pre) pre.style.opacity = op;
+    if (this.elBig) this.elBig.style.opacity = op;
+    if (this.elPre) this.elPre.style.opacity = op;
   }
 };
 
@@ -874,6 +942,7 @@ const SCENES = [BOOT, TITLE, SENTENCE, PART, PLASMA, VECTORS, TUNNEL, WAVES, SCR
 const SCENE_LABELS = ['boot','title','sentence','particles','plasma','vectors','tunnel','waves','scroller','credits','end'];
 let idx = 0, sceneStart = 0, paused = false, started = false, atEnd = false;
 let frameCount = 0, fpsLast = 0, fps = 60;
+let lastTimerStr = '';
 
 function enterScene(i) {
   idx = i;
@@ -915,7 +984,8 @@ function loop(now) {
       const m = String(Math.floor(tot/60)).padStart(2,'0');
       const s = String(tot%60).padStart(2,'0');
       const ms = String(Math.floor((localT%1)*100)).padStart(2,'0');
-      $t.textContent = `${m}:${s}.${ms}`;
+      const timerStr = `${m}:${s}.${ms}`;
+      if (timerStr !== lastTimerStr) { $t.textContent = timerStr; lastTimerStr = timerStr; }
     }
     frameCount++;
     if (now - fpsLast > 500) { fps = Math.round(frameCount * 1000 / (now - fpsLast)); $fps.textContent = String(fps).padStart(2,'0'); fpsLast = now; frameCount = 0; }
