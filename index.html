@@ -258,7 +258,7 @@ const stars = (() => {
 let bootHtml = '';
 function buildBootHtml() {
   // Pretty BIOS POST. Every "buffalo" linked.
-  const ok = (t) => `<span style="color:var(--lm);text-shadow:0 0 6px rgba(163,255,18,.5);font-weight:700">[ OK ]</span>`;
+  const ok = () => `<span style="color:var(--lm);text-shadow:0 0 6px rgba(163,255,18,.5);font-weight:700">[ OK ]</span>`;
   const fail = `<span style="color:var(--rd);text-shadow:0 0 6px rgba(255,56,80,.5);font-weight:700">[ FAIL ]</span>`;
   const row = (left, right, idx) =>
     `<div data-at="${idx}" style="display:flex;justify-content:space-between;max-width:880px;opacity:0">${left}<span style="min-width:84px;text-align:right">${right || ''}</span></div>`;
@@ -729,7 +729,7 @@ const SCROLLER = {
   dur: 7,
   enter() {
     ov.innerHTML = `
-      <div class="ov-caption" style="bottom:144px">scene · vi · scroller iii · sine · ${b('buffalo')}</div>`;
+      <div class="ov-caption" style="bottom:144px">scene · ix · scroller iii · sine · ${b('buffalo')}</div>`;
   },
   render(t) {
     ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
@@ -901,12 +901,13 @@ function loop(now) {
     if (localT >= SCENES[idx].dur) {
       if (idx === SCENES.length - 1) {
         atEnd = true;
-        localT = SCENES[idx].dur - 1.0;
+        localT = SCENES[idx].dur - 0.5;
       } else {
         next();
+        localT = t - sceneStart;
       }
     }
-    if (atEnd) localT = Math.min(localT, SCENES[idx].dur - 1.0);
+    if (atEnd) localT = Math.min(localT, SCENES[idx].dur - 0.5);
     {
       SCENES[idx].render(localT, dt);
       // HUD timer
@@ -1068,17 +1069,19 @@ document.addEventListener('click', (e) => {
   if (!el) return;
   e.stopPropagation();
   const text = el.getAttribute('data-copy');
-  if (navigator.clipboard) navigator.clipboard.writeText(text).catch(()=>{});
-  const prev = el.textContent;
-  el.textContent = '✓ copied';
-  setTimeout(() => { el.textContent = prev; }, 1400);
+  const prev = el.innerHTML;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => { el.textContent = '✓ copied'; setTimeout(() => { el.innerHTML = prev; }, 1400); })
+      .catch(() => {});
+  }
 });
 
 document.addEventListener('keydown', (e) => {
   if (!started) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); begin(); } return; }
   if (e.key === ' ') { e.preventDefault(); paused = !paused; $st.textContent = paused ? '■ paused' : '► running'; $st.className = paused ? 'p' : ''; setAudioPaused(paused); }
-  else if (e.key === 'ArrowRight') next();
-  else if (e.key === 'ArrowLeft') prev();
+  else if (e.key === 'ArrowRight') { atEnd = false; next(); }
+  else if (e.key === 'ArrowLeft')  { atEnd = false; prev(); }
   else if (e.key === 'r' || e.key === 'R') { atEnd = false; restart(); }
 });
 
