@@ -75,11 +75,11 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
 #hud .wm em { display: block; font-family: var(--ft); font-size: 16px; letter-spacing: .3em; color: var(--tl); font-style: normal; margin-top: 4px; }
 #hud .sc { top: 18px; right: 22px; text-align: right; color: var(--ink-2); white-space: nowrap; min-width: 180px; }
 #hud .sc i { font-style: normal; color: var(--ink-1); }
-#hud .sc s { text-decoration: none; color: var(--lm); }
-#hud .sc s.p { color: var(--mg); }
+#hud-state { text-decoration: none; color: var(--lm); }
+#hud-state.p { color: var(--mg); }
 #hud .fps { bottom: 14px; right: 22px; text-align: right; color: var(--lm); white-space: nowrap; min-width: 200px; }
 #hud .fps b { color: var(--am); font-weight: normal; display: block; }
-#hud .fps u { text-decoration: none; color: var(--cy); display: block; cursor: pointer; pointer-events: auto; }
+#hud-au { text-decoration: underline dotted; color: var(--cy); display: block; cursor: pointer; pointer-events: auto; }
 #hud .ctrl { bottom: 14px; left: 22px; color: var(--ink-1); white-space: nowrap; }
 #hud .cmd { bottom: 92px; left: 22px; pointer-events: auto; color: var(--ink-2); font-family: var(--fm); font-size: 12px; letter-spacing: .08em; text-transform: none; white-space: nowrap; }
 #hud .cmd a.b { color: var(--lm); }
@@ -163,29 +163,29 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
   <div class="pre">buffalo · presents</div>
   <div class="big">buffalo</div>
   <div class="asm">. a s m</div>
-  <div class="install" onclick="navigator.clipboard&&navigator.clipboard.writeText('pip install buffalo-ipsum');this.textContent='✓ copied  ·  pip install buffalo-ipsum';">pip install buffalo-ipsum &nbsp;—&nbsp; tap to copy</div>
+  <div class="install" onclick="navigator.clipboard&&navigator.clipboard.writeText('pip install buffalo-ipsum').then(()=>{this.textContent='✓ copied  ·  pip install buffalo-ipsum'});">pip install buffalo-ipsum &nbsp;—&nbsp; tap to copy</div>
   <div class="meta">
     a 64k demoscene intro for the python package <a class="b" href="https://github.com/kcm/buffalo-ipsum">buffalo-ipsum</a><br>
     motion-reduced view · the full demo is animation-heavy
   </div>
-  <div class="force"><a onclick="document.getElementById('reduced').style.display='none';document.getElementById('frame').style.display='grid';">play the demo anyway →</a></div>
+  <div class="force"><button onclick="document.getElementById('reduced').style.display='none';document.getElementById('frame').style.display='grid';" style="background:none;border:none;padding:0;font:inherit;color:var(--cy);cursor:pointer;text-transform:uppercase;letter-spacing:.25em;font-size:10px">play the demo anyway →</button></div>
 </div>
 
 <div id="frame">
   <div id="stage">
-    <canvas id="fx" width="1280" height="720"></canvas>
+    <canvas id="fx" width="1280" height="720" role="img" aria-label="Animated demoscene intro for buffalo-ipsum"></canvas>
     <div id="ov"></div>
 
     <div id="hud" hidden>
       <div class="wm"><a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener" style="pointer-events:auto">b·u·f·f·a·l·o</a><em>. a s m</em></div>
-      <div class="sc">scene <span id="hud-scene">i</span> / <span id="hud-total">ix</span><br><i>T+ <span id="hud-t">00:00.00</span></i><br><s id="hud-state">► running</s></div>
+      <div class="sc">scene <span id="hud-scene">i</span> / <span id="hud-total">ix</span><br><i>T+ <span id="hud-t">00:00.00</span></i><br><span id="hud-state" aria-live="polite">► running</span></div>
       <div class="cmd">pip install <a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener">buffalo</a>-ipsum <span class="arrow">→ kcm/buffalo-ipsum</span></div>
-      <div class="fps">FPS <span id="hud-fps">60</span>.00<b>MEM 0x<span id="hud-mem">4042B0</span></b><u id="hud-au">— silent</u></div>
-      <div class="ctrl">► click · pause<br>← → · skip · R · restart</div>
+      <div class="fps">FPS <span id="hud-fps">60</span>.00<b>MEM 0x<span id="hud-mem">4042B0</span></b><span id="hud-au" role="button" tabindex="0" aria-label="Toggle audio" title="Toggle audio (M)">— silent</span></div>
+      <div class="ctrl">► click · pause<br>← → · skip · R · restart · M · mute</div>
       <div class="scr"><div>&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;GREETINGS TO: BUFFALO, BUFFALO, BUFFALO &amp; BUFFALO&nbsp;&nbsp;·&nbsp;&nbsp;buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo&nbsp;&nbsp;·&nbsp;&nbsp;pip install buffalo-ipsum&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;GREETINGS TO: BUFFALO, BUFFALO, BUFFALO &amp; BUFFALO&nbsp;&nbsp;·&nbsp;&nbsp;buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo&nbsp;&nbsp;·&nbsp;&nbsp;pip install buffalo-ipsum&nbsp;&nbsp;·&nbsp;&nbsp;</div></div>
     </div>
 
-    <div id="gate">
+    <div id="gate" role="button" tabindex="0" aria-label="Start the buffalo.asm demo">
       <div class="starfield" style="opacity:.35;position:absolute"></div>
       <div class="pre" style="position:relative">buffalo · presents</div>
       <div class="big" style="position:relative">buffalo</div>
@@ -911,7 +911,7 @@ const END = {
       <div class="ov-center" style="gap:28px">
         <div id="en-pre" style="font-family:var(--ft);font-size:22px;letter-spacing:.35em;color:var(--ink-1);text-transform:lowercase">— end —</div>
         <div id="en-big" style="font-family:var(--fd);font-size:64px;letter-spacing:.06em;background:linear-gradient(90deg,var(--cy),var(--mg),var(--am));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px rgba(0,229,255,.35))">${b('buffalo')}.</div>
-        <div data-copy="pip install buffalo-ipsum" style="margin-top:8px;padding:14px 22px;background:var(--void-1);border:1px solid var(--ink-1);font-family:var(--fm);font-size:18px;color:var(--lm);letter-spacing:.04em;cursor:pointer;pointer-events:auto;user-select:all">pip install ${b('buffalo')}-ipsum &nbsp;—&nbsp; click to copy</div>
+        <div data-copy="pip install buffalo-ipsum" role="button" tabindex="0" style="margin-top:8px;padding:14px 22px;background:var(--void-1);border:1px solid var(--ink-1);font-family:var(--fm);font-size:18px;color:var(--lm);letter-spacing:.04em;cursor:pointer;pointer-events:auto;user-select:all">pip install ${b('buffalo')}-ipsum &nbsp;—&nbsp; click to copy</div>
         <div style="margin-top:8px;font-family:var(--fm);font-size:12px;letter-spacing:.4em;color:var(--ink-1);text-transform:uppercase;text-align:center;line-height:1.7">
           ${b('github.com/kcm/buffalo-ipsum')}<br/>
           press R to replay · or click anywhere
@@ -1132,6 +1132,7 @@ function begin() {
   startAudio();
 }
 gate.addEventListener('click', begin);
+gate.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); begin(); } });
 
 // Click-to-copy for any element with [data-copy] (used on the end-scene install line)
 document.addEventListener('click', (e) => {
@@ -1153,15 +1154,18 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowRight') { atEnd = false; next(); }
   else if (e.key === 'ArrowLeft')  { atEnd = false; prev(); }
   else if (e.key === 'r' || e.key === 'R') { atEnd = false; restart(); }
+  else if (e.key === 'm' || e.key === 'M') { toggleMute(); }
 });
 
-$au.addEventListener('click', (e) => {
-  e.stopPropagation();
+function toggleMute() {
   if (!audioCtx || !audioGain) return;
   audioMuted = !audioMuted;
   audioGain.gain.value = audioMuted ? 0 : 0.6;
   $au.textContent = audioMuted ? '— muted' : '♪ buffalo';
-});
+}
+
+$au.addEventListener('click', (e) => { e.stopPropagation(); toggleMute(); });
+$au.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleMute(); } });
 
 // Click on stage (but not on a link) toggles pause
 stage.addEventListener('click', (e) => {
