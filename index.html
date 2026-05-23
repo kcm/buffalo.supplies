@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>buffalo.asm · buffalo-ipsum</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="buffalo.asm — the homepage for buffalo-ipsum, a Python package that generates lorem-ipsum text using only the word buffalo." />
+<meta name="theme-color" content="#06080d" />
+<meta name="author" content="buffalo" />
+
+<!-- Open Graph + Twitter -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="buffalo.asm" />
+<meta property="og:description" content="A 64K demoscene intro for the buffalo-ipsum PyPI package. Every word is buffalo." />
+<meta property="og:url" content="https://buffalo.supplies" />
+<meta property="og:image" content="https://buffalo.supplies/og.png" />
+<meta property="og:image:width" content="1280" />
+<meta property="og:image:height" content="720" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="buffalo.asm" />
+<meta name="twitter:description" content="pip install buffalo-ipsum" />
+<meta name="twitter:image" content="https://buffalo.supplies/og.png" />
+<link rel="canonical" href="https://buffalo.supplies/" />
+
+<!-- Inline SVG favicon — buffalo monogram, plasma-clipped 'b' on void -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='p' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%2300e5ff'/><stop offset='50%25' stop-color='%23ff2bd6'/><stop offset='100%25' stop-color='%23ffb020'/></linearGradient></defs><rect width='64' height='64' fill='%23060810'/><text x='32' y='48' text-anchor='middle' font-family='monospace' font-weight='900' font-size='44' fill='url(%23p)'>b</text></svg>" />
+
+<!-- Preconnect to Google Fonts so first paint isn't gated on DNS -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<style>
+/* =============================================================
+   buffalo.asm — single-file SPA
+   homepage for: pip install buffalo-ipsum
+   repo:        https://github.com/kcm/buffalo-ipsum
+   ============================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --void-0:#06080d; --void-1:#0b0f18; --void-2:#121826;
+  --ink-1:#5b6c86; --ink-2:#9aaecb; --ink-3:#e6eef9;
+  --cy:#00e5ff; --mg:#ff2bd6; --am:#ffb020; --lm:#a3ff12; --rd:#ff3850;
+  --tl:#3fd3c4; --vt:#7b6cf6; --rose:#f06292;
+  --fd:'Press Start 2P',monospace;
+  --ft:'VT323',monospace;
+  --fm:'JetBrains Mono',ui-monospace,monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #000; color: var(--ink-3); font-family: var(--ft); overflow: hidden; width: 100%; height: 100%; }
+
+/* Every visible buffalo is a link to the github repo */
+a.b { color: inherit; text-decoration: none; cursor: pointer; transition: filter 80ms linear; }
+a.b:hover { filter: brightness(1.35) saturate(1.2); }
+a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
+
+/* Stage scales from 1280×720 to fit viewport */
+#frame { position: fixed; inset: 0; display: grid; place-items: center; background: #000; }
+#stage { width: 1280px; height: 720px; position: relative; background: var(--void-1); overflow: hidden; transform-origin: center; }
+#fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#ov { position: absolute; inset: 0; pointer-events: none; }
+#ov .pe { pointer-events: auto; }  /* opt-in clickable */
+/* CRT vignette + scanlines over everything */
+#stage::after { content:''; position:absolute; inset:0; pointer-events:none; z-index: 80;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* HUD */
+#hud { position: absolute; inset: 0; pointer-events: none; z-index: 90; font-family: var(--fm); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; }
+#hud > * { position: absolute; line-height: 1.55; }
+#hud .wm { top: 18px; left: 22px; font-family: var(--fd); font-size: 14px; color: var(--ink-3); text-shadow: 0 0 8px var(--cy); }
+#hud .wm em { display: block; font-family: var(--ft); font-size: 16px; letter-spacing: .3em; color: var(--tl); font-style: normal; margin-top: 4px; }
+#hud .sc { top: 18px; right: 22px; text-align: right; color: var(--ink-2); white-space: nowrap; min-width: 180px; }
+#hud .sc i { font-style: normal; color: var(--ink-1); }
+#hud .sc s { text-decoration: none; color: var(--lm); }
+#hud .sc s.p { color: var(--mg); }
+#hud .fps { bottom: 14px; right: 22px; text-align: right; color: var(--lm); white-space: nowrap; min-width: 200px; }
+#hud .fps b { color: var(--am); font-weight: normal; display: block; }
+#hud .fps u { text-decoration: none; color: var(--cy); display: block; }
+#hud .ctrl { bottom: 14px; left: 22px; color: var(--ink-1); white-space: nowrap; }
+#hud .cmd { bottom: 92px; left: 22px; pointer-events: auto; color: var(--ink-2); font-family: var(--fm); font-size: 12px; letter-spacing: .08em; text-transform: none; white-space: nowrap; }
+#hud .cmd a.b { color: var(--lm); }
+#hud .cmd .arrow { color: var(--ink-1); }
+#hud .scr { left: 0; right: 0; bottom: 56px; height: 24px; overflow: hidden; }
+#hud .scr div { display: inline-block; white-space: nowrap; font-family: var(--fd); font-size: 12px; letter-spacing: .22em; color: var(--cy); text-shadow: 0 0 8px var(--cy); animation: scroll 38s linear infinite; }
+@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* Gate */
+#gate { position: absolute; inset: 0; z-index: 200; background: var(--void-0); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; }
+#gate .pre { font-family: var(--fm); font-size: 12px; letter-spacing: .5em; color: var(--tl); text-transform: uppercase; }
+#gate .big { font-family: var(--fd); font-size: 84px; letter-spacing: .1em; background: linear-gradient(90deg, var(--cy), var(--mg), var(--am)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 14px rgba(0,229,255,.35)); line-height: 1; }
+#gate .asm { font-family: var(--ft); font-size: 28px; letter-spacing: .4em; color: var(--ink-3); }
+#gate .cta { font-family: var(--fd); font-size: 20px; letter-spacing: .2em; color: var(--mg); text-shadow: 0 0 8px var(--mg); text-transform: uppercase; margin-top: 24px; animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+#gate .meta { margin-top: 18px; font-family: var(--fm); font-size: 11px; letter-spacing: .3em; color: var(--ink-1); text-transform: uppercase; text-align: center; line-height: 1.7; }
+#gate .meta a.b { color: var(--lm); pointer-events: auto; }
+.starfield { position: absolute; inset: 0;
+  background-color: var(--void-1);
+  background-image:
+    radial-gradient(1px 1px at 5% 12%, #e6eef9, transparent 40%),
+    radial-gradient(1px 1px at 18% 38%, #9aaecb, transparent 40%),
+    radial-gradient(1px 1px at 32% 8%, #5b6c86, transparent 40%),
+    radial-gradient(1px 1px at 44% 52%, #e6eef9, transparent 40%),
+    radial-gradient(1px 1px at 58% 26%, #9aaecb, transparent 40%),
+    radial-gradient(2px 2px at 70% 70%, #e6eef9, transparent 50%),
+    radial-gradient(1px 1px at 82% 18%, #5b6c86, transparent 40%),
+    radial-gradient(1px 1px at 88% 60%, #9aaecb, transparent 40%),
+    radial-gradient(1px 1px at 12% 78%, #e6eef9, transparent 40%),
+    radial-gradient(1px 1px at 50% 85%, #9aaecb, transparent 40%);
+}
+
+/* Overlay text styles, reused by scene().render() */
+.ov-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: auto; padding: 0 80px; }
+.ov-caption { position: absolute; left: 0; right: 0; bottom: 110px; text-align: center; font-family: var(--fm); font-size: 12px; letter-spacing: .45em; color: var(--ink-2); text-transform: uppercase; pointer-events: none; }
+
+/* Hidden YouTube container */
+#yt { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ----------------------------------------------------------
+   Reduced-motion poster: respect users who can't or don't want
+   90 seconds of flashing copper bars + plasma + chromatic strobe.
+   Hides the stage entirely; shows a static page instead.
+   --------------------------------------------------------- */
+#reduced { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  #frame { display: none; }
+  #reduced {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    position: fixed; inset: 0; padding: 40px 24px;
+    background: var(--void-0); color: var(--ink-3);
+    font-family: var(--ft); text-align: center;
+  }
+  #reduced .pre { font-family: var(--fm); font-size: 12px; letter-spacing: .5em; color: var(--tl); text-transform: uppercase; }
+  #reduced .big {
+    font-family: var(--fd); font-size: clamp(40px, 12vw, 96px); letter-spacing: .08em; line-height: 1;
+    background: linear-gradient(90deg, var(--cy), var(--mg), var(--am));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  #reduced .asm { font-family: var(--ft); font-size: clamp(20px, 5vw, 32px); letter-spacing: .4em; color: var(--ink-3); }
+  #reduced .install {
+    margin-top: 14px; padding: 14px 22px; background: var(--void-1); border: 1px solid var(--ink-1);
+    font-family: var(--fm); font-size: clamp(14px, 2.4vw, 18px); color: var(--lm); letter-spacing: .04em;
+    cursor: pointer; user-select: all;
+  }
+  #reduced .meta { margin-top: 14px; font-family: var(--fm); font-size: 11px; letter-spacing: .3em; color: var(--ink-1); text-transform: uppercase; line-height: 1.8; max-width: 560px; }
+  #reduced a.b { color: var(--lm); }
+  #reduced .force { margin-top: 28px; font-family: var(--fm); font-size: 10px; letter-spacing: .25em; color: var(--ink-1); text-transform: uppercase; }
+  #reduced .force a { color: var(--cy); cursor: pointer; pointer-events: auto; }
+}
+</style>
+</head>
+<body data-screen-label="buffalo.asm">
+
+<!-- ----- Reduced-motion + no-JS poster ----- -->
+<noscript>
+  <style>#frame{display:none}</style>
+</noscript>
+
+<div id="reduced">
+  <div class="pre">buffalo · presents</div>
+  <div class="big">buffalo</div>
+  <div class="asm">. a s m</div>
+  <div class="install" onclick="navigator.clipboard&&navigator.clipboard.writeText('pip install buffalo-ipsum');this.textContent='✓ copied  ·  pip install buffalo-ipsum';">pip install buffalo-ipsum &nbsp;—&nbsp; tap to copy</div>
+  <div class="meta">
+    a 64k demoscene intro for the python package <a class="b" href="https://github.com/kcm/buffalo-ipsum">buffalo-ipsum</a><br>
+    motion-reduced view · the full demo is animation-heavy
+  </div>
+  <div class="force"><a onclick="document.getElementById('reduced').style.display='none';document.getElementById('frame').style.display='grid';">play the demo anyway →</a></div>
+</div>
+
+<div id="frame">
+  <div id="stage">
+    <canvas id="fx" width="1280" height="720"></canvas>
+    <div id="ov"></div>
+
+    <div id="hud" hidden>
+      <div class="wm"><a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener" style="pointer-events:auto">b·u·f·f·a·l·o</a><em>. a s m</em></div>
+      <div class="sc">scene <span id="hud-scene">i</span> / <span id="hud-total">ix</span><br><i>T+ <span id="hud-t">00:00.00</span></i><br><s id="hud-state">► running</s></div>
+      <div class="cmd">pip install <a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener">buffalo</a>-ipsum <span class="arrow">→ kcm/buffalo-ipsum</span></div>
+      <div class="fps">FPS <span id="hud-fps">60</span>.00<b>MEM 0x<span id="hud-mem">4042B0</span></b><u id="hud-au">— silent</u></div>
+      <div class="ctrl">► click · pause<br>← → · skip · R · restart</div>
+      <div class="scr"><div>&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;GREETINGS TO: BUFFALO, BUFFALO, BUFFALO &amp; BUFFALO&nbsp;&nbsp;·&nbsp;&nbsp;buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo&nbsp;&nbsp;·&nbsp;&nbsp;pip install buffalo-ipsum&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;GREETINGS TO: BUFFALO, BUFFALO, BUFFALO &amp; BUFFALO&nbsp;&nbsp;·&nbsp;&nbsp;buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo&nbsp;&nbsp;·&nbsp;&nbsp;pip install buffalo-ipsum&nbsp;&nbsp;·&nbsp;&nbsp;</div></div>
+    </div>
+
+    <div id="gate">
+      <div class="starfield" style="opacity:.35;position:absolute"></div>
+      <div class="pre" style="position:relative">buffalo · presents</div>
+      <div class="big" style="position:relative">buffalo</div>
+      <div class="asm" style="position:relative">. a s m</div>
+      <div class="cta">► PRESS BUFFALO TO BUFFALO</div>
+      <div class="meta">a 64k intro · the homepage for · <a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener">buffalo</a>-ipsum<br>audio · web audio chiptune · click to begin</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ---- constants ----
+const W = 1280, H = 720;
+const REPO = 'https://github.com/kcm/buffalo-ipsum';
+
+// ---- el refs ----
+const fx = document.getElementById('fx');
+const ctx = fx.getContext('2d');
+const ov = document.getElementById('ov');
+const hud = document.getElementById('hud');
+const gate = document.getElementById('gate');
+const stage = document.getElementById('stage');
+const $scene = document.getElementById('hud-scene');
+const $t = document.getElementById('hud-t');
+const $st = document.getElementById('hud-state');
+const $fps = document.getElementById('hud-fps');
+const $mem = document.getElementById('hud-mem');
+const $au = document.getElementById('hud-au');
+
+// ---- buffalo helper: returns an HTML <a> string ----
+const b = (text='buffalo', extra='') =>
+  `<a class="b" href="${REPO}" target="_blank" rel="noopener"${extra}>${text}</a>`;
+
+// ---- viewport scaling ----
+function fit() {
+  const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+  stage.style.transform = `scale(${s})`;
+}
+fit();
+window.addEventListener('resize', fit);
+
+// ============================================================
+// SCENES — each: { dur, render(t,dt) → draws to canvas & sets innerHTML }
+// All HTML buffalo words are wrapped in <a class="b">. Canvas effects are
+// abstract dots/bars so legibility lives in the DOM.
+// ============================================================
+
+const romans = ['o','i','ii','iii','iv','v','vi','vii','viii','ix','x','xi','xii'];
+
+// Precompute a starfield as a static canvas image once
+const stars = (() => {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const sx = c.getContext('2d');
+  sx.fillStyle = '#06080d'; sx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 220; i++) {
+    const x = Math.random() * W, y = Math.random() * H;
+    const v = Math.random();
+    sx.fillStyle = v < 0.3 ? '#e6eef9' : v < 0.6 ? '#9aaecb' : '#5b6c86';
+    const s = v < 0.05 ? 2 : 1;
+    sx.fillRect(x, y, s, s);
+  }
+  return c;
+})();
+
+// ---------- 1. BOOT ----------
+let bootHtml = '';
+function buildBootHtml() {
+  // Pretty BIOS POST. Every "buffalo" linked.
+  const ok = (t) => `<span style="color:var(--lm);text-shadow:0 0 6px rgba(163,255,18,.5);font-weight:700">[ OK ]</span>`;
+  const fail = `<span style="color:var(--rd);text-shadow:0 0 6px rgba(255,56,80,.5);font-weight:700">[ FAIL ]</span>`;
+  const row = (left, right, idx) =>
+    `<div data-at="${idx}" style="display:flex;justify-content:space-between;max-width:880px;opacity:0">${left}<span style="min-width:84px;text-align:right">${right || ''}</span></div>`;
+  return `
+  <div style="position:absolute;inset:0;background:var(--void-0);padding:76px 64px;font-family:var(--fm);font-size:18px;line-height:1.55;color:var(--lm);pointer-events:auto">
+    ${row(`${b('buffalo')} BIOS · v0.8.0 · (c) ${b('buffalo')}`, '', 0)}
+    ${row(`${b('buffalo')} cpu  ............................................`, ok(), 1)}
+    ${row(`${b('buffalo')} mem  ........... 64K conventional .................`, ok(), 2)}
+    ${row(`${b('buffalo')} gfx  ........... vga 320×200 .....................`, ok(), 3)}
+    ${row(`${b('buffalo')} snd  ........... gus pnp ..........................`, fail, 4)}
+    ${row(`${b('buffalo')} snd  ........... retry ............................`, ok(), 5)}
+    ${row(`${b('buffalo')} dsk  ........... a: ${b('buffalo')}.asm  ..............`, ok(), 6)}
+    ${row(`${b('buffalo')} run  ........... loading ${b('buffalo')} ..............`, ok(), 7)}
+    ${row(`<span style="color:var(--ink-3)">&gt; pip install ${b('buffalo')}-ipsum_</span>`, '', 8)}
+  </div>`;
+}
+const BOOT = {
+  dur: 6,
+  enter() { ov.innerHTML = buildBootHtml(); },
+  render(t) {
+    // draw nothing on canvas; clear once.
+    ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
+    // Reveal each row
+    ov.querySelectorAll('[data-at]').forEach((el) => {
+      const at = parseFloat(el.dataset.at) * 0.55;
+      el.style.opacity = t > at ? '1' : '0';
+    });
+  }
+};
+
+// ---------- 2. TITLE — Second Reality burst ----------
+const TITLE = {
+  dur: 7,
+  enter() {
+    ov.innerHTML = `
+      <div class="ov-center" style="pointer-events:auto">
+        <div id="tt-pres" style="position:absolute;top:178px;font-family:var(--fm);font-size:13px;letter-spacing:.6em;color:var(--cy);text-shadow:0 0 8px var(--cy);text-transform:uppercase;opacity:0">${b('buffalo')} &nbsp;·&nbsp; presents</div>
+        <div id="tt-big" style="position:relative;line-height:1">
+          <div id="tt-mg" style="position:absolute;left:0;right:0;top:0;font-family:var(--fd);font-size:132px;letter-spacing:.06em;color:var(--mg);opacity:.7;mix-blend-mode:screen">${b('BUFFALO')}</div>
+          <div id="tt-cy" style="position:absolute;left:0;right:0;top:0;font-family:var(--fd);font-size:132px;letter-spacing:.06em;color:var(--cy);opacity:.7;mix-blend-mode:screen">${b('BUFFALO')}</div>
+          <div id="tt-wh" style="position:relative;font-family:var(--fd);font-size:132px;letter-spacing:.06em;color:#f0f6ff;text-shadow:0 0 12px rgba(255,255,255,.6),0 0 36px rgba(0,229,255,.4)">${b('BUFFALO')}</div>
+        </div>
+        <div id="tt-sub" style="position:absolute;bottom:198px;font-family:var(--ft);font-size:38px;letter-spacing:.4em;color:var(--ink-3);opacity:0">. a s m</div>
+        <div id="tt-meta" style="position:absolute;bottom:156px;font-family:var(--fm);font-size:11px;letter-spacing:.4em;color:var(--am);text-transform:uppercase;opacity:0">a 64k intro · pip install ${b('buffalo')}-ipsum</div>
+      </div>`;
+  },
+  render(t, _dt) {
+    // burst on canvas: copper bars sweep in, plasma bar across middle
+    ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
+    const k = Math.min(1, t / 0.6); // copper sweep
+    const osc = t > 0.6 ? Math.sin((t - 0.6) * 2.0) * 12 : 0;
+
+    // copper bar function
+    const drawCopper = (x0, w) => {
+      const g = ctx.createLinearGradient(0, 0, 0, 16);
+      // build repeating pattern via direct fillRects
+      for (let y = 120 + osc; y < H - 120 - osc; y += 18) {
+        ctx.fillStyle = '#00e5ff'; ctx.fillRect(x0, y, w, 4);
+        ctx.fillStyle = '#ff2bd6'; ctx.fillRect(x0, y + 6, w, 4);
+        ctx.fillStyle = '#ffb020'; ctx.fillRect(x0, y + 12, w, 4);
+      }
+    };
+    const leftX = -200 + 200 * k;
+    const rightX = W - 132 + (1 - k) * 200;
+    drawCopper(leftX, 132);
+    drawCopper(rightX, 132);
+
+    // plasma bar middle
+    const bar = ctx.createLinearGradient(132, 0, W - 132, 0);
+    bar.addColorStop(0, '#00e5ff');
+    bar.addColorStop(0.5, '#ff2bd6');
+    bar.addColorStop(1, '#ffb020');
+    ctx.fillStyle = bar;
+    const y0 = H/2 - 3 + Math.sin(t * 1.8) * 3;
+    ctx.fillRect(132, y0, W - 264, 6);
+
+    // burst scale on the lead text
+    const tt = document.getElementById('tt-big');
+    if (tt) {
+      const burst = t < 0.45 ? 1.3 - 0.3 * (t / 0.45) : 1.0 + 0.05 * Math.sin(((t - 0.45) / 0.15) * Math.PI);
+      tt.style.transform = `scale(${burst})`;
+    }
+    // chromatic offsets
+    const dx = 4 + Math.sin(t * 4) * 2;
+    const mg = document.getElementById('tt-mg');
+    const cy = document.getElementById('tt-cy');
+    if (mg) mg.style.transform = `translate(${dx}px, 2px)`;
+    if (cy) cy.style.transform = `translate(${-dx}px, -2px)`;
+
+    // fade-ins
+    const show = (t - 0.8) / 0.4;
+    const op = Math.max(0, Math.min(1, show));
+    ['tt-pres','tt-sub','tt-meta'].forEach(id => { const el = document.getElementById(id); if (el) el.style.opacity = op; });
+  }
+};
+
+// ---------- 3. SENTENCE ----------
+const SENTENCE = {
+  dur: 8,
+  enter() {
+    // each word with its semantic class
+    const w = (txt, cls) => `<span data-w="${cls}" style="opacity:0;transition:opacity 180ms linear;display:inline-block">${b(txt)}</span>`;
+    ov.innerHTML = `
+      <div class="ov-center">
+        <div style="font-family:var(--fm);font-size:12px;letter-spacing:.4em;color:var(--ink-1);text-transform:uppercase;margin-bottom:28px">scene · ii · the sentence</div>
+        <div id="snt" style="font-family:var(--ft);font-size:56px;line-height:1.4;letter-spacing:.01em;color:var(--ink-3);max-width:1080px">
+          ${w('Buffalo','T')} ${w('buffalo','l')} ${w('Buffalo','T')} ${w('buffalo','l')} ${w('buffalo','v')} ${w('buffalo','v')} ${w('Buffalo','T')} ${w('buffalo','l')}.
+        </div>
+        <div id="snt-leg" style="margin-top:48px;opacity:0;display:flex;gap:48px;font-family:var(--fm);font-size:13px;letter-spacing:.18em;text-transform:uppercase">
+          <div><span style="color:var(--tl);text-shadow:0 0 6px rgba(63,211,196,.5)">Buffalo</span> <span style="color:var(--ink-1)">· the city</span></div>
+          <div><span style="color:var(--ink-3)">buffalo</span> <span style="color:var(--ink-1)">· the animal</span></div>
+          <div><span style="color:var(--mg);text-shadow:0 0 6px rgba(255,43,214,.5)">buffalo</span> <span style="color:var(--ink-1)">· to bully</span></div>
+        </div>
+      </div>`;
+  },
+  render(t) {
+    // dim starfield
+    ctx.drawImage(stars, 0, 0);
+    ctx.fillStyle = 'rgba(11,15,24,.5)'; ctx.fillRect(0,0,W,H);
+
+    const step = 0.42;
+    const n = Math.min(8, Math.floor(t / step) + 1);
+    const colors = { T: ['var(--tl)', '0 0 8px rgba(63,211,196,.6)'], v: ['var(--mg)', '0 0 8px rgba(255,43,214,.6)'], l: ['var(--ink-3)', 'none'] };
+    document.querySelectorAll('#snt span[data-w]').forEach((el, i) => {
+      if (i < n) {
+        el.style.opacity = '1';
+        const [c, g] = colors[el.dataset.w];
+        el.style.color = c; el.style.textShadow = g;
+      }
+    });
+    const leg = document.getElementById('snt-leg');
+    if (leg) leg.style.opacity = t > 4 ? Math.min(1, (t - 4) / 0.8) : 0;
+  }
+};
+
+// ---------- 4. PARTICLES ----------
+// canvas-only effect: dots fly into letterforms of "buffalo" in three cases.
+const PART = {
+  dur: 9,
+  parts: null,
+  targets: null,
+  phaseT: null,
+  init() {
+    // build targets by rendering text to an offscreen canvas and sampling alpha
+    const off = document.createElement('canvas'); off.width = W; off.height = H;
+    const o = off.getContext('2d');
+    o.fillStyle = '#fff'; o.textAlign = 'center'; o.textBaseline = 'middle';
+    o.font = '240px "Press Start 2P", monospace';
+    const sample = (txt) => {
+      o.clearRect(0,0,W,H);
+      o.fillText(txt, W/2, H/2);
+      const d = o.getImageData(0,0,W,H).data;
+      const pts = [];
+      for (let y = 0; y < H; y += 7) for (let x = 0; x < W; x += 7) {
+        if (d[(y*W+x)*4+3] > 128) pts.push({x: x+(Math.random()-.5)*4, y: y+(Math.random()-.5)*4});
+      }
+      return pts;
+    };
+    this.targets = [sample('buffalo'), sample('Buffalo'), sample('BUFFALO')];
+    // Cap particle count to the SMALLEST target so every dot lands on a glyph.
+    // Extras are visually noisy — demoscene tightness means: one dot per pixel.
+    const min = Math.min(...this.targets.map(a => a.length));
+    this.parts = new Array(min).fill(0).map(() => ({
+      x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, tx: 0, ty: 0
+    }));
+    this.phaseT = -1;
+  },
+  enter() {
+    this.init();
+    ov.innerHTML = `<div class="ov-caption">scene · iii · particles · ${b('buffalo')} · click ${b('buffalo')} to install</div>`;
+  },
+  render(t) {
+    const phaseDur = 2.6;
+    const phase = Math.min(2, Math.floor(t / phaseDur));
+    if (phase !== this.phaseT) {
+      this.phaseT = phase;
+      const tg = this.targets[phase];
+      // Random pairing between particles and target points; if particles < targets,
+      // some target points won't be reached but the shape will still read.
+      for (let i = 0; i < this.parts.length; i++) {
+        const t = tg[i % tg.length];
+        this.parts[i].tx = t.x; this.parts[i].ty = t.y;
+      }
+    }
+    // fade trail
+    ctx.fillStyle = 'rgba(6,8,13,.30)'; ctx.fillRect(0,0,W,H);
+    const cols = ['#00e5ff','#ff2bd6','#ffb020'];
+    const c = cols[phase];
+    ctx.fillStyle = c;
+    for (let i = 0; i < this.parts.length; i++) {
+      const p = this.parts[i];
+      p.vx = (p.vx + (p.tx - p.x) * 0.085) * 0.82;
+      p.vy = (p.vy + (p.ty - p.y) * 0.085) * 0.82;
+      p.x += p.vx; p.y += p.vy;
+      ctx.fillRect(p.x | 0, p.y | 0, 2, 2);
+    }
+    // soft halo pass
+    ctx.globalAlpha = 0.25;
+    for (let i = 0; i < this.parts.length; i++) {
+      const p = this.parts[i];
+      ctx.fillRect((p.x | 0) - 1, (p.y | 0) - 1, 4, 4);
+    }
+    ctx.globalAlpha = 1;
+  }
+};
+
+// ---------- 5. PLASMA ----------
+const PLASMA = {
+  dur: 7,
+  enter() {
+    ov.innerHTML = `
+      <div class="ov-caption">scene · iv · plasma · ${b('buffalo')} ${b('buffalo')} ${b('buffalo')}</div>
+      <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:auto">
+        <div id="pl-echo3" style="position:absolute;left:0;right:0;font-family:var(--fd);font-size:144px;letter-spacing:.04em;opacity:.07;mix-blend-mode:screen">${b('BUFFALO')}</div>
+        <div id="pl-echo2" style="position:absolute;left:0;right:0;font-family:var(--fd);font-size:144px;letter-spacing:.04em;opacity:.1;mix-blend-mode:screen">${b('BUFFALO')}</div>
+        <div id="pl-echo1" style="position:absolute;left:0;right:0;font-family:var(--fd);font-size:144px;letter-spacing:.04em;opacity:.13;mix-blend-mode:screen">${b('BUFFALO')}</div>
+        <div id="pl-lead" style="position:relative;font-family:var(--fd);font-size:144px;letter-spacing:.04em;line-height:1">${b('BUFFALO')}</div>
+      </div>`;
+  },
+  render(t) {
+    // animated copper sides + plasma bar middle
+    ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
+    const offL = Math.sin(t * 2.2) * 18;
+    const offR = -offL;
+    // left + right copper
+    for (let y = 80 + offL; y < H - 80 - offL; y += 18) {
+      ctx.fillStyle = '#00e5ff'; ctx.fillRect(0, y, 96, 4);
+      ctx.fillStyle = '#ff2bd6'; ctx.fillRect(0, y + 6, 96, 4);
+      ctx.fillStyle = '#ffb020'; ctx.fillRect(0, y + 12, 96, 4);
+    }
+    for (let y = 80 + offR; y < H - 80 - offR; y += 18) {
+      ctx.fillStyle = '#00e5ff'; ctx.fillRect(W - 96, y, 96, 4);
+      ctx.fillStyle = '#ff2bd6'; ctx.fillRect(W - 96, y + 6, 96, 4);
+      ctx.fillStyle = '#ffb020'; ctx.fillRect(W - 96, y + 12, 96, 4);
+    }
+    // skewed plasma stripe across middle
+    ctx.save();
+    ctx.translate(W/2, H/2);
+    ctx.transform(1, 0, Math.sin(t * 1.4) * 0.08, 1, 0, 0);
+    const grad = ctx.createLinearGradient(-W/2 + 96, 0, W/2 - 96, 0);
+    grad.addColorStop(0, '#00e5ff'); grad.addColorStop(.5, '#ff2bd6'); grad.addColorStop(1, '#ffb020');
+    ctx.fillStyle = grad;
+    ctx.globalAlpha = 0.45;
+    ctx.fillRect(-W/2 + 96, -8, W - 192, 16);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // strobing word colors
+    const phase = Math.floor((t * 6) % 3);
+    const cols = ['#00e5ff','#ff2bd6','#ffb020'];
+    const lead = document.getElementById('pl-lead');
+    if (lead) { lead.style.color = cols[phase]; lead.style.textShadow = `0 0 14px ${cols[phase]}, 0 0 36px ${cols[phase]}80`; }
+    const eA = document.getElementById('pl-echo1'); if (eA) eA.style.color = cols[(phase+1)%3];
+    const eB = document.getElementById('pl-echo2'); if (eB) eB.style.color = cols[(phase+2)%3];
+    const eC = document.getElementById('pl-echo3'); if (eC) eC.style.color = cols[phase];
+  }
+};
+
+// ---------- 6. VECTORS — Second Reality vector balls ----------
+// 3D point cloud sampled from the word BUFFALO, then lifted onto a curved Z
+// surface, rotated XYZ, rendered with a single pre-baked sprite (one drawImage
+// per ball — the demoscene way).
+const VECTORS = {
+  dur: 8,
+  pts: null,
+  sprite: null,
+  init() {
+    // sample BUFFALO into 3D points
+    const off = document.createElement('canvas'); off.width = W; off.height = H;
+    const o = off.getContext('2d');
+    o.fillStyle = '#fff'; o.textAlign = 'center'; o.textBaseline = 'middle';
+    o.font = '160px "Press Start 2P", monospace';
+    o.fillText('BUFFALO', W/2, H/2);
+    const d = o.getImageData(0, 0, W, H).data;
+    const pts = [];
+    for (let y = 0; y < H; y += 22) for (let x = 0; x < W; x += 22) {
+      if (d[(y*W+x)*4+3] > 128) {
+        const cx = x - W/2, cy = y - H/2;
+        // gentle bowl curve across the word so it has depth without folding
+        const cz = Math.sin((x / W) * Math.PI) * 70;
+        pts.push({ x: cx, y: cy, z: cz });
+      }
+    }
+    this.pts = pts;
+
+    // pre-render ball sprite once
+    const r = 36;
+    const sp = document.createElement('canvas'); sp.width = sp.height = r * 2;
+    const sx = sp.getContext('2d');
+    const g = sx.createRadialGradient(r * 0.7, r * 0.7, 0, r, r, r);
+    g.addColorStop(0,    'rgba(255,255,255,1)');
+    g.addColorStop(0.18, 'rgba(0,229,255,0.95)');
+    g.addColorStop(0.55, 'rgba(255,43,214,0.55)');
+    g.addColorStop(1,    'rgba(6,8,13,0)');
+    sx.fillStyle = g;
+    sx.beginPath(); sx.arc(r, r, r, 0, Math.PI * 2); sx.fill();
+    this.sprite = sp;
+  },
+  enter() {
+    this.init();
+    ov.innerHTML = `<div class="ov-caption">scene · vi · vector balls · ${b('BUFFALO')} · ${b('BUFFALO')} · ${b('BUFFALO')}</div>`;
+  },
+  render(t) {
+    ctx.fillStyle = 'rgba(6,8,13,.45)'; ctx.fillRect(0,0,W,H);
+    const cx = W/2, cy = H/2;
+    // bounded oscillation so the word always faces the camera — never edge-on
+    const ry = Math.sin(t * 0.6) * 0.55;
+    const rx = Math.sin(t * 0.45 + 1.0) * 0.32;
+    const rz = Math.sin(t * 0.35 + 0.5) * 0.10;
+    const cosY = Math.cos(ry), sinY = Math.sin(ry);
+    const cosX = Math.cos(rx), sinX = Math.sin(rx);
+    const cosZ = Math.cos(rz), sinZ = Math.sin(rz);
+    const camZ = 620;
+
+    // project + sort back-to-front
+    const proj = this.pts.map(p => {
+      // rotate Z (roll) first, then Y, then X
+      const rxz = p.x * cosZ - p.y * sinZ;
+      const ryz = p.x * sinZ + p.y * cosZ;
+      const x1 = rxz * cosY - p.z * sinY;
+      const z1 = rxz * sinY + p.z * cosY;
+      const y2 = ryz * cosX - z1 * sinX;
+      const z2 = ryz * sinX + z1 * cosX;
+      return { x: x1, y: y2, z: z2 };
+    });
+    proj.sort((a, b) => b.z - a.z);
+
+    for (const p of proj) {
+      const persp = camZ / (camZ + p.z);
+      const px = cx + p.x * persp;
+      const py = cy + p.y * persp;
+      const size = 56 * persp;
+      // alpha purely on perspective — nearer balls are brighter, far balls dim
+      // but never invisible. Range ~ 0.35 (back) → 1.0 (front).
+      ctx.globalAlpha = Math.max(0.35, Math.min(1, persp * 0.95));
+      ctx.drawImage(this.sprite, px - size/2, py - size/2, size, size);
+    }
+    ctx.globalAlpha = 1;
+  }
+};
+
+// ---------- 7. TUNNEL ----------
+const TUNNEL = {
+  dur: 8,
+  rings: null,
+  init() {
+    this.rings = [];
+    const palette = ['#00e5ff', '#ff2bd6', '#ffb020', '#a3ff12'];
+    for (let i = 0; i < 36; i++) this.rings.push({ z: i * 0.5, r: 200 + Math.sin(i * 0.4) * 30, c: palette[i % 4], ph: i * 0.3 });
+  },
+  enter() {
+    this.init();
+    ov.innerHTML = `
+      <div class="ov-caption">scene · v · tunnel · ${b('buffalo')}</div>
+      <div id="tu-center" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:auto">
+        <div id="tu-word" style="font-family:var(--fd);font-size:56px;letter-spacing:.1em;color:#f0f6ff;text-shadow:0 0 16px rgba(255,255,255,.7),0 0 36px rgba(0,229,255,.6);line-height:1">${b('BUFFALO')}</div>
+      </div>`;
+  },
+  render(t) {
+    ctx.fillStyle = 'rgba(6,8,13,.28)'; ctx.fillRect(0,0,W,H);
+    const cx = W/2, cy = H/2;
+    const camZ = (t * 6) % 0.5;
+    const roll = t * 0.4;
+    for (let i = this.rings.length - 1; i >= 0; i--) {
+      const r = this.rings[i];
+      const zRel = r.z - camZ;
+      if (zRel <= 0.05) continue;
+      const persp = 1 / zRel;
+      const projR = r.r * persp * 0.8;
+      if (projR > W * 0.9) continue;
+      const alpha = Math.min(1, persp * 0.5);
+      ctx.fillStyle = r.c;
+      for (let d = 0; d < 32; d++) {
+        const ang = (d / 32) * Math.PI * 2 + roll + r.ph;
+        const x = cx + Math.cos(ang) * projR;
+        const y = cy + Math.sin(ang) * projR * 0.62;
+        const sz = Math.max(1, persp * 3.2);
+        ctx.globalAlpha = alpha * 0.25; ctx.fillRect(x - sz * 1.5, y - sz * 1.5, sz * 3, sz * 3);
+        ctx.globalAlpha = alpha; ctx.fillRect(x - sz/2, y - sz/2, sz, sz);
+      }
+    }
+    ctx.globalAlpha = 1;
+    const word = document.getElementById('tu-word');
+    if (word) word.style.transform = `scale(${0.94 + 0.06 * Math.sin(t * 2.2)})`;
+  }
+};
+
+// ---------- 8. WAVES — wave buffer / ripple effect ----------
+// classic 2D wave equation on a low-res grid; raindrops in the shape of BUFFALO
+// fall periodically, ripple outward, dissipate. Grid renders to ImageData,
+// upscales with nearest-neighbor for that 320×200 VGA bite.
+const WAVES = {
+  dur: 8,
+  GW: 256, GH: 144,
+  cur: null, prv: null, img: null, tmp: null, tmpCtx: null,
+  bufPts: null, lastDrop: -1,
+  init() {
+    const N = this.GW * this.GH;
+    this.cur = new Float32Array(N);
+    this.prv = new Float32Array(N);
+    this.img = ctx.createImageData(this.GW, this.GH);
+    // pre-sample BUFFALO at grid res
+    const off = document.createElement('canvas'); off.width = this.GW; off.height = this.GH;
+    const o = off.getContext('2d');
+    o.fillStyle = '#fff'; o.textAlign = 'center'; o.textBaseline = 'middle';
+    o.font = `${Math.floor(this.GH * 0.22)}px "Press Start 2P", monospace`;
+    o.fillText('BUFFALO', this.GW/2, this.GH/2);
+    const d = o.getImageData(0, 0, this.GW, this.GH).data;
+    const pts = [];
+    for (let y = 2; y < this.GH - 2; y++) for (let x = 2; x < this.GW - 2; x++) {
+      if (d[(y*this.GW + x)*4 + 3] > 128) pts.push({ x, y });
+    }
+    this.bufPts = pts;
+    this.lastDrop = -1;
+    // tmp canvas for scaling
+    this.tmp = document.createElement('canvas');
+    this.tmp.width = this.GW; this.tmp.height = this.GH;
+    this.tmpCtx = this.tmp.getContext('2d');
+  },
+  enter() { this.init(); ov.innerHTML = `<div class="ov-caption">scene · viii · wave buffer · ${b('buffalo')} · ${b('buffalo')} · ${b('buffalo')}</div>`; },
+  render(t) {
+    const WW = this.GW, HH = this.GH;
+    // drop BUFFALO every 1.6s
+    const drop = Math.floor(t / 2.2);
+    if (drop !== this.lastDrop) {
+      this.lastDrop = drop;
+      const strength = 35;
+      for (const p of this.bufPts) this.prv[p.y * WW + p.x] += strength;
+    }
+    // ambient raindrops
+    if (Math.random() < 0.18) {
+      const rx = (Math.random() * (WW - 4) + 2) | 0;
+      const ry = (Math.random() * (HH - 4) + 2) | 0;
+      this.prv[ry * WW + rx] += 60;
+    }
+    // wave step
+    const cur = this.cur, prv = this.prv;
+    for (let y = 1; y < HH - 1; y++) {
+      const row = y * WW;
+      for (let x = 1; x < WW - 1; x++) {
+        const i = row + x;
+        cur[i] = (prv[i-1] + prv[i+1] + prv[i-WW] + prv[i+WW]) * 0.5 - cur[i];
+        cur[i] *= 0.986;
+      }
+    }
+    // swap
+    this.cur = prv; this.prv = cur;
+
+    // render to ImageData — two-tone height map
+    const data = this.img.data;
+    const fld = this.prv;
+    for (let i = 0, p = 0; i < WW * HH; i++, p += 4) {
+      const v = fld[i];
+      const a = Math.min(1, Math.abs(v) / 28);
+      if (v >= 0) { data[p] = (a*0) | 0; data[p+1] = (a*229) | 0; data[p+2] = (a*255) | 0; }
+      else        { data[p] = (a*255) | 0; data[p+1] = (a*43) | 0;  data[p+2] = (a*214) | 0; }
+      data[p+3] = 255;
+    }
+    this.tmpCtx.putImageData(this.img, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.tmp, 0, 0, W, H);
+    ctx.imageSmoothingEnabled = true;
+  }
+};
+
+// ---------- 9. SCROLLER ----------
+const SCROLLER = {
+  dur: 7,
+  enter() {
+    ov.innerHTML = `
+      <div class="ov-caption" style="bottom:144px">scene · vi · scroller iii · sine · ${b('buffalo')}</div>`;
+  },
+  render(t) {
+    ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
+
+    // top lane — small amber, fast, right→left
+    drawScrollLane('· buffalo · buffalo · buffalo · buffalo · buffalo · buffalo · ',
+                   170, 20, '#ffb020', t, 120, -1, 0, 0);
+    // mid lane — big cyan, sine wobble per character
+    drawSineLane('BUFFALO  buffalo  BUFFALO  buffalo  Buffalo  buffalo  BUFFALO  ',
+                 360, 72, '#00e5ff', t, 70, 36, 1.6);
+    // bottom lane — magenta, slower
+    drawScrollLane('◆ greetings to buffalo, buffalo, BUFFALO & buffalo ◆ greetings to buffalo, buffalo, BUFFALO & buffalo ',
+                   520, 26, '#ff2bd6', t, 50, 1, 0, 0);
+  }
+};
+
+function drawScrollLane(text, y, fontSize, color, t, speed, dir, _amp, _freq) {
+  ctx.font = `${fontSize}px "Press Start 2P", monospace`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = color;
+  ctx.shadowColor = color; ctx.shadowBlur = 8;
+  const m = ctx.measureText(text);
+  const w = m.width;
+  const repeats = Math.ceil(W / w) + 2;
+  let x = dir < 0 ? -(t * speed) % w : ((t * speed) % w) - w;
+  for (let i = 0; i < repeats; i++) { ctx.fillText(text, x + i * w, y); }
+  ctx.shadowBlur = 0;
+}
+function drawSineLane(text, y, fontSize, color, t, speed, amp, freq) {
+  ctx.font = `${fontSize}px "Press Start 2P", monospace`;
+  ctx.fillStyle = color;
+  ctx.shadowColor = color; ctx.shadowBlur = 10;
+  // Walk character by character to get per-char y offset
+  const baseX = -((t * speed) % (W * 2));
+  let x = baseX;
+  for (let pass = 0; pass < 6; pass++) {
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const phase = (i + pass * text.length) * 0.18;
+      const yo = Math.sin(t * freq + phase) * amp;
+      ctx.fillText(ch, x, y + yo);
+      x += ctx.measureText(ch).width + (fontSize * 0.06);
+      if (x > W + 100) break;
+    }
+    if (x > W + 100) break;
+  }
+  ctx.shadowBlur = 0;
+}
+
+// ---------- 8. CREDITS ----------
+const CREDITS = {
+  dur: 12,
+  enter() {
+    const role = (r, n, hot) => `<div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:6px 0;font-family:var(--ft);font-size:28px;line-height:1.4">
+      <span style="text-align:right;color:var(--ink-1);text-transform:uppercase;letter-spacing:.2em;font-size:22px">${r}</span>
+      <span style="text-align:left;color:${hot ? 'var(--mg)' : 'var(--ink-3)'};text-shadow:${hot ? '0 0 8px rgba(255,43,214,.5)' : 'none'};letter-spacing:.04em">${b(n)}</span>
+    </div>`;
+    const soft = (n) => `<div style="text-align:center;font-family:var(--ft);font-size:26px;line-height:1.5;color:var(--ink-2);letter-spacing:.04em">${n}</div>`;
+    const sp = (h) => `<div style="height:${h}px"></div>`;
+    ov.innerHTML = `
+      <div style="position:absolute;inset:0;overflow:hidden;pointer-events:auto">
+        <div id="cr-list" style="position:absolute;left:0;right:0;text-align:center;will-change:transform">
+          <div style="font-family:var(--fm);font-size:18px;color:var(--cy);letter-spacing:.25em;text-shadow:0 0 8px var(--cy);text-transform:uppercase;line-height:1.6">a ${b('buffalo')} intro by<br/>
+            <span style="font-family:var(--fd);font-size:40px;color:var(--ink-3);text-shadow:none;letter-spacing:.06em">${b('buffalo')}</span>
+          </div>
+          ${sp(56)}
+          ${role('code','buffalo')}
+          ${role('graphics','buffalo')}
+          ${role('music','BUFFALO',true)}
+          ${role('text','buffalo')}
+          ${role('package','buffalo-ipsum')}
+          ${sp(48)}
+          <div style="font-family:var(--ft);font-size:22px;color:var(--ink-1);text-transform:uppercase;letter-spacing:.2em">greetings to</div>
+          ${soft(b('buffalo')+' · '+b('buffalo')+' · '+b('BUFFALO'))}
+          ${soft(b('buffalo')+' · '+b('Buffalo')+' · '+b('buffalo'))}
+          ${soft(b('BUFFALO')+' · '+b('buffalo')+' · '+b('buffalo'))}
+          ${soft('&amp; '+b('buffalo'))}
+          ${sp(56)}
+          <div style="font-family:var(--ft);font-size:22px;color:var(--ink-1);text-transform:uppercase;letter-spacing:.2em">special thanks</div>
+          ${soft(b('buffalo'))}
+          ${soft(b('buffalo'))}
+          ${soft(b('buffalo'))}
+          ${sp(80)}
+          <div style="font-family:var(--ft);font-size:32px;line-height:1.4;color:var(--ink-3);letter-spacing:.02em;padding:8px 80px">
+            ${b('Buffalo')} ${b('buffalo')} ${b('Buffalo')} ${b('buffalo')} ${b('buffalo')} ${b('buffalo')} ${b('Buffalo')} ${b('buffalo')}.
+          </div>
+          ${sp(96)}
+          <div style="text-align:center;font-family:var(--fm);font-size:14px;color:var(--am);letter-spacing:.3em;text-transform:uppercase">
+            pip install ${b('buffalo')}-ipsum
+          </div>
+          ${sp(48)}
+          <div style="text-align:center;font-family:var(--ft);font-size:26px;color:var(--ink-2)">— ${b('buffalo')} —</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(180deg,var(--void-0),transparent);pointer-events:none"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(0deg,var(--void-0),transparent);pointer-events:none"></div>
+      </div>`;
+  },
+  render(t) {
+    ctx.drawImage(stars, 0, 0);
+    ctx.fillStyle = 'rgba(11,15,24,.7)'; ctx.fillRect(0,0,W,H);
+    const list = document.getElementById('cr-list');
+    if (list) {
+      const total = list.scrollHeight;
+      const travel = total + H;
+      const k = Math.min(1, t / (CREDITS.dur - 0.4));
+      list.style.transform = `translateY(${H - travel * k}px)`;
+    }
+  }
+};
+
+// ---------- 9. END ----------
+const END = {
+  dur: 5,
+  enter() {
+    ov.innerHTML = `
+      <div class="ov-center" style="gap:28px">
+        <div id="en-pre" style="font-family:var(--ft);font-size:22px;letter-spacing:.35em;color:var(--ink-1);text-transform:lowercase">— end —</div>
+        <div id="en-big" style="font-family:var(--fd);font-size:64px;letter-spacing:.06em;background:linear-gradient(90deg,var(--cy),var(--mg),var(--am));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px rgba(0,229,255,.35))">${b('buffalo')}.</div>
+        <div data-copy="pip install buffalo-ipsum" style="margin-top:8px;padding:14px 22px;background:var(--void-1);border:1px solid var(--ink-1);font-family:var(--fm);font-size:18px;color:var(--lm);letter-spacing:.04em;cursor:pointer;pointer-events:auto;user-select:all">pip install ${b('buffalo')}-ipsum &nbsp;—&nbsp; click to copy</div>
+        <div style="margin-top:8px;font-family:var(--fm);font-size:12px;letter-spacing:.4em;color:var(--ink-1);text-transform:uppercase;text-align:center;line-height:1.7">
+          ${b('github.com/kcm/buffalo-ipsum')}<br/>
+          press R to ${b('buffalo')} · or wait
+        </div>
+      </div>`;
+  },
+  render(t) {
+    ctx.fillStyle = '#06080d'; ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha = 0.2; ctx.drawImage(stars, 0, 0); ctx.globalAlpha = 1;
+    const fadeIn = Math.min(1, t / 1.2);
+    const fadeOut = END.dur - t < 0.8 ? Math.max(0, (END.dur - t) / 0.8) : 1;
+    const flick = t > 2 && Math.sin(t * 6) > 0.92 ? 0.6 : 1;
+    const op = fadeIn * fadeOut * flick;
+    const big = document.getElementById('en-big'); if (big) big.style.opacity = op;
+    const pre = document.getElementById('en-pre'); if (pre) pre.style.opacity = op;
+  }
+};
+
+// ============================================================
+// ENGINE
+// ============================================================
+const SCENES = [BOOT, TITLE, SENTENCE, PART, PLASMA, VECTORS, TUNNEL, WAVES, SCROLLER, CREDITS, END];
+const SCENE_LABELS = ['boot','title','sentence','particles','plasma','vectors','tunnel','waves','scroller','credits','end'];
+let idx = 0, sceneStart = 0, paused = false, started = false;
+let frameCount = 0, fpsLast = 0, fps = 60;
+
+function enterScene(i) {
+  idx = i;
+  sceneStart = performance.now() / 1000;
+  // HARD clear canvas on every scene transition — no leakage from previous scene
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#06080d';
+  ctx.fillRect(0, 0, W, H);
+  if (SCENES[i].enter) SCENES[i].enter();
+  $scene.textContent = romans[i + 1] || String(i + 1);
+  $mem.textContent = (0x4042B0 + i * 0x10).toString(16).toUpperCase();
+}
+
+function next() { enterScene((idx + 1) % SCENES.length); }
+function prev() { enterScene((idx - 1 + SCENES.length) % SCENES.length); }
+function restart() { enterScene(0); }
+
+let lastT = 0;
+function loop(now) {
+  const t = now / 1000;
+  const dt = lastT ? t - lastT : 0;
+  lastT = t;
+  if (!paused && started) {
+    const localT = t - sceneStart;
+    if (localT >= SCENES[idx].dur) {
+      next();
+    } else {
+      SCENES[idx].render(localT, dt);
+      // HUD timer
+      const tot = Math.floor(localT);
+      const m = String(Math.floor(tot/60)).padStart(2,'0');
+      const s = String(tot%60).padStart(2,'0');
+      const ms = String(Math.floor((localT%1)*100)).padStart(2,'0');
+      $t.textContent = `${m}:${s}.${ms}`;
+    }
+    frameCount++;
+    if (now - fpsLast > 500) { fps = Math.round(frameCount * 1000 / (now - fpsLast)); $fps.textContent = String(fps).padStart(2,'0'); fpsLast = now; frameCount = 0; }
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame((n) => { fpsLast = n; loop(n); });
+
+// ---- audio (Web Audio chiptune — synthesized once into an AudioBuffer,
+// then played on loop. No external dependency, no streaming, ~14s loop.) ----
+let audioCtx = null, audioSrc = null, audioGain = null;
+
+function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+function writeTone(L, R, sr, startS, durS, freq, wave, vol, atkS, relS) {
+  const start = Math.floor(startS * sr);
+  const len = Math.floor(durS * sr);
+  const end = Math.min(L.length, start + len);
+  const atk = Math.max(1, Math.floor(atkS * sr));
+  const rel = Math.max(1, Math.floor(relS * sr));
+  for (let i = start; i < end; i++) {
+    const ls = i - start;
+    let env = vol;
+    if (ls < atk) env *= ls / atk;
+    const rem = len - ls;
+    if (rem < rel) env *= rem / rel;
+    const ph = ((i / sr) * freq) % 1;
+    let s;
+    if (wave === 'square')      s = ph < 0.5 ? 1 : -1;
+    else if (wave === 'pulse25') s = ph < 0.25 ? 1 : -1;
+    else if (wave === 'saw')     s = 2 * ph - 1;
+    else if (wave === 'tri')     s = ph < 0.5 ? 4 * ph - 1 : 3 - 4 * ph;
+    else                          s = Math.sin(ph * Math.PI * 2);
+    const v = s * env;
+    L[i] += v; R[i] += v;
+  }
+}
+function writeNoise(L, R, sr, startS, durS, vol, decay) {
+  const start = Math.floor(startS * sr);
+  const end = Math.min(L.length, start + Math.floor(durS * sr));
+  for (let i = start; i < end; i++) {
+    const t = (i - start) / sr;
+    const env = Math.exp(-t * decay) * vol;
+    const s = (Math.random() * 2 - 1) * env;
+    L[i] += s; R[i] += s;
+  }
+}
+function writeKick(L, R, sr, startS, vol) {
+  const dur = 0.18;
+  const start = Math.floor(startS * sr);
+  const end = Math.min(L.length, start + Math.floor(dur * sr));
+  for (let i = start; i < end; i++) {
+    const t = (i - start) / sr;
+    const env = Math.exp(-t * 18) * vol;
+    const freq = 120 * Math.exp(-t * 16) + 42;
+    const s = Math.sin(t * freq * Math.PI * 2) * env;
+    L[i] += s; R[i] += s;
+  }
+}
+function buildLoop(actx) {
+  const BPM = 138, bars = 8, bpb = 4;
+  const beat = 60 / BPM;
+  const total = bars * bpb * beat;          // ~13.91s
+  const sr = actx.sampleRate;
+  const buf = actx.createBuffer(2, Math.floor(total * sr), sr);
+  const L = buf.getChannelData(0), R = buf.getChannelData(1);
+
+  // Am — F — C — G — Am — F — C — G  (i  VI  III  VII, x2)
+  const roots = [45, 41, 36, 43];           // A2 F2 C2 G2 MIDI
+  const chords = [
+    [69, 72, 76, 72],                       // Am: A C E C
+    [65, 69, 72, 69],                       // F:  F A C A
+    [60, 64, 67, 64],                       // C:  C E G E
+    [67, 71, 74, 71]                        // G:  G B D B
+  ];
+  for (let bar = 0; bar < bars; bar++) {
+    const root = roots[bar % 4];
+    // bass: eighths on the root, octave-down
+    for (let e = 0; e < 8; e++) {
+      writeTone(L, R, sr, bar*bpb*beat + e*beat/2, beat/2 * 0.92, midiToFreq(root - 12), 'square', 0.16, 0.004, 0.04);
+    }
+    // lead: sixteenth-note arpeggio in chord
+    const arp = chords[bar % 4];
+    for (let s = 0; s < 16; s++) {
+      const n = arp[s % 4] + (s === 14 ? 2 : 0);  // tiny variation
+      writeTone(L, R, sr, bar*bpb*beat + s*beat/4, beat/4 * 0.78, midiToFreq(n), 'pulse25', 0.07, 0.002, 0.02);
+    }
+  }
+  // melody (bars 4..7) — long notes over second pass
+  const mel = [76, 79, 76, 72, 76, 79, 81, 79];   // E5 G5 E5 C5 E5 G5 A5 G5
+  for (let i = 0; i < mel.length; i++) {
+    const t0 = 4*bpb*beat + i * 2 * beat;          // every 2 beats
+    if (t0 < total) writeTone(L, R, sr, t0, beat * 1.7, midiToFreq(mel[i]), 'saw', 0.085, 0.012, 0.12);
+  }
+  // drums
+  for (let b = 0; b < bars * bpb; b++) writeKick(L, R, sr, b * beat, 0.45);
+  for (let bar = 0; bar < bars; bar++) {
+    for (let bb = 0; bb < bpb; bb++) {
+      const t0 = (bar*bpb + bb) * beat;
+      if (bb === 1 || bb === 3) writeNoise(L, R, sr, t0, 0.13, 0.18, 22);
+      for (let s = 0; s < 4; s++) writeNoise(L, R, sr, t0 + s*beat/4, 0.035, 0.04, 70);
+    }
+  }
+  // normalize / soft-clip
+  for (let i = 0; i < L.length; i++) {
+    L[i] = Math.tanh(L[i] * 0.9);
+    R[i] = Math.tanh(R[i] * 0.9);
+  }
+  return buf;
+}
+function startAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { $au.textContent = '— silent'; return; }
+    audioCtx = new AC();
+    const buf = buildLoop(audioCtx);
+    audioSrc = audioCtx.createBufferSource();
+    audioSrc.buffer = buf;
+    audioSrc.loop = true;
+    audioGain = audioCtx.createGain();
+    audioGain.gain.value = 0.6;
+    audioSrc.connect(audioGain).connect(audioCtx.destination);
+    audioSrc.start();
+    $au.textContent = '♪ buffalo';
+  } catch (_) {
+    $au.textContent = '— silent';
+  }
+}
+function setAudioPaused(p) {
+  if (!audioCtx) return;
+  if (p) { try { audioCtx.suspend(); } catch(_){} }
+  else   { try { audioCtx.resume();  } catch(_){} }
+}
+
+// ---- input ----
+function begin() {
+  if (started) return;
+  started = true;
+  gate.style.display = 'none';
+  hud.hidden = false;
+  // set total scene count in HUD now that SCENES is defined
+  const $total = document.getElementById('hud-total');
+  if ($total) $total.textContent = romans[SCENES.length] || String(SCENES.length);
+  enterScene(0);
+  startAudio();
+}
+gate.addEventListener('click', begin);
+
+// Click-to-copy for any element with [data-copy] (used on the end-scene install line)
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-copy]');
+  if (!el) return;
+  e.stopPropagation();
+  const text = el.getAttribute('data-copy');
+  if (navigator.clipboard) navigator.clipboard.writeText(text).catch(()=>{});
+  const prev = el.textContent;
+  el.textContent = '✓ copied';
+  setTimeout(() => { el.textContent = prev; }, 1400);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (!started) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); begin(); } return; }
+  if (e.key === ' ') { e.preventDefault(); paused = !paused; $st.textContent = paused ? '■ paused' : '► running'; $st.className = paused ? 'p' : ''; setAudioPaused(paused); }
+  else if (e.key === 'ArrowRight') next();
+  else if (e.key === 'ArrowLeft') prev();
+  else if (e.key === 'r' || e.key === 'R') restart();
+});
+
+// Click on stage (but not on a link) toggles pause
+stage.addEventListener('click', (e) => {
+  if (!started) return;
+  if (e.target.closest('a')) return;          // don't intercept links
+  if (e.target.closest('#gate')) return;
+  paused = !paused;
+  $st.textContent = paused ? '■ paused' : '► running';
+  $st.className = paused ? 'p' : '';
+  setAudioPaused(paused);
+});
+})();
+</script>
+</body>
+</html>
