@@ -79,7 +79,7 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
 #hud .sc s.p { color: var(--mg); }
 #hud .fps { bottom: 14px; right: 22px; text-align: right; color: var(--lm); white-space: nowrap; min-width: 200px; }
 #hud .fps b { color: var(--am); font-weight: normal; display: block; }
-#hud .fps u { text-decoration: none; color: var(--cy); display: block; }
+#hud .fps u { text-decoration: none; color: var(--cy); display: block; cursor: pointer; pointer-events: auto; }
 #hud .ctrl { bottom: 14px; left: 22px; color: var(--ink-1); white-space: nowrap; }
 #hud .cmd { bottom: 92px; left: 22px; pointer-events: auto; color: var(--ink-2); font-family: var(--fm); font-size: 12px; letter-spacing: .08em; text-transform: none; white-space: nowrap; }
 #hud .cmd a.b { color: var(--lm); }
@@ -851,7 +851,7 @@ const END = {
         <div data-copy="pip install buffalo-ipsum" style="margin-top:8px;padding:14px 22px;background:var(--void-1);border:1px solid var(--ink-1);font-family:var(--fm);font-size:18px;color:var(--lm);letter-spacing:.04em;cursor:pointer;pointer-events:auto;user-select:all">pip install ${b('buffalo')}-ipsum &nbsp;—&nbsp; click to copy</div>
         <div style="margin-top:8px;font-family:var(--fm);font-size:12px;letter-spacing:.4em;color:var(--ink-1);text-transform:uppercase;text-align:center;line-height:1.7">
           ${b('github.com/kcm/buffalo-ipsum')}<br/>
-          press R to ${b('buffalo')} · or wait
+          press R to replay · or click anywhere
         </div>
       </div>`;
   },
@@ -872,7 +872,7 @@ const END = {
 // ============================================================
 const SCENES = [BOOT, TITLE, SENTENCE, PART, PLASMA, VECTORS, TUNNEL, WAVES, SCROLLER, CREDITS, END];
 const SCENE_LABELS = ['boot','title','sentence','particles','plasma','vectors','tunnel','waves','scroller','credits','end'];
-let idx = 0, sceneStart = 0, paused = false, started = false;
+let idx = 0, sceneStart = 0, paused = false, started = false, atEnd = false;
 let frameCount = 0, fpsLast = 0, fps = 60;
 
 function enterScene(i) {
@@ -897,10 +897,17 @@ function loop(now) {
   const dt = lastT ? t - lastT : 0;
   lastT = t;
   if (!paused && started) {
-    const localT = t - sceneStart;
+    let localT = t - sceneStart;
     if (localT >= SCENES[idx].dur) {
-      next();
-    } else {
+      if (idx === SCENES.length - 1) {
+        atEnd = true;
+        localT = SCENES[idx].dur - 1.0;
+      } else {
+        next();
+      }
+    }
+    if (atEnd) localT = Math.min(localT, SCENES[idx].dur - 1.0);
+    {
       SCENES[idx].render(localT, dt);
       // HUD timer
       const tot = Math.floor(localT);
@@ -918,7 +925,7 @@ requestAnimationFrame((n) => { fpsLast = n; loop(n); });
 
 // ---- audio (Web Audio chiptune — synthesized once into an AudioBuffer,
 // then played on loop. No external dependency, no streaming, ~14s loop.) ----
-let audioCtx = null, audioSrc = null, audioGain = null;
+let audioCtx = null, audioSrc = null, audioGain = null, audioMuted = false;
 
 function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
 function writeTone(L, R, sr, startS, durS, freq, wave, vol, atkS, relS) {
@@ -1072,7 +1079,15 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ') { e.preventDefault(); paused = !paused; $st.textContent = paused ? '■ paused' : '► running'; $st.className = paused ? 'p' : ''; setAudioPaused(paused); }
   else if (e.key === 'ArrowRight') next();
   else if (e.key === 'ArrowLeft') prev();
-  else if (e.key === 'r' || e.key === 'R') restart();
+  else if (e.key === 'r' || e.key === 'R') { atEnd = false; restart(); }
+});
+
+$au.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!audioCtx || !audioGain) return;
+  audioMuted = !audioMuted;
+  audioGain.gain.value = audioMuted ? 0 : 0.6;
+  $au.textContent = audioMuted ? '— muted' : '♪ buffalo';
 });
 
 // Click on stage (but not on a link) toggles pause
@@ -1080,6 +1095,7 @@ stage.addEventListener('click', (e) => {
   if (!started) return;
   if (e.target.closest('a')) return;          // don't intercept links
   if (e.target.closest('#gate')) return;
+  if (atEnd) { atEnd = false; restart(); return; }
   paused = !paused;
   $st.textContent = paused ? '■ paused' : '► running';
   $st.className = paused ? 'p' : '';
