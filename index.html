@@ -179,7 +179,7 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
 
     <div id="hud" hidden>
       <div class="wm"><a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener" style="pointer-events:auto">b·u·f·f·a·l·o</a><em>. a s m</em></div>
-      <div class="sc">scene <span id="hud-scene">i</span> / <span id="hud-total">ix</span><br><i>T+ <span id="hud-t">00:00.00</span></i><br><span id="hud-state" aria-live="polite">► running</span></div>
+      <div class="sc"><span id="hud-scene-row">scene <span id="hud-scene">i</span> / <span id="hud-total">vii</span></span><br><i>T+ <span id="hud-t">00:00.00</span></i><br><span id="hud-state" aria-live="polite">► running</span></div>
       <div class="cmd">pip install <a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener">buffalo</a>-ipsum <span class="arrow">→ kcm/buffalo-ipsum</span></div>
       <div class="fps">FPS <span id="hud-fps">60</span>.00<b id="hud-mem-btn" title="MEM">MEM 0x<span id="hud-mem">4042B0</span></b><span id="hud-au" role="button" tabindex="0" aria-label="Toggle audio" title="Toggle audio (M)">— silent</span></div>
       <div class="ctrl">► click · pause<br>← → · skip · R · restart · M · mute</div>
@@ -218,6 +218,7 @@ const hud = document.getElementById('hud');
 const gate = document.getElementById('gate');
 const stage = document.getElementById('stage');
 const $scene = document.getElementById('hud-scene');
+const $sceneRow = document.getElementById('hud-scene-row');
 const $t = document.getElementById('hud-t');
 const $st = document.getElementById('hud-state');
 const $fps = document.getElementById('hud-fps');
@@ -367,13 +368,14 @@ const TITLE = {
 
 // ---------- 3. SENTENCE ----------
 const SENTENCE = {
+  fx: true,
   dur: 8,
   enter() {
     // each word with its semantic class
     const w = (txt, cls) => `<span data-w="${cls}" style="opacity:0;transition:opacity 180ms linear;display:inline-block">${b(txt)}</span>`;
     ov.innerHTML = `
       <div class="ov-center">
-        <div style="font-family:var(--fm);font-size:12px;letter-spacing:.4em;color:var(--ink-1);text-transform:uppercase;margin-bottom:28px">scene · iii · the sentence</div>
+        <div style="font-family:var(--fm);font-size:12px;letter-spacing:.4em;color:var(--ink-1);text-transform:uppercase;margin-bottom:28px">scene · i · the sentence</div>
         <div id="snt" style="font-family:var(--ft);font-size:56px;line-height:1.4;letter-spacing:.01em;color:var(--ink-3);max-width:1080px">
           ${w('Buffalo','T')} ${w('buffalo','l')} ${w('Buffalo','T')} ${w('buffalo','l')} ${w('buffalo','v')} ${w('buffalo','v')} ${w('Buffalo','T')} ${w('buffalo','l')}.
         </div>
@@ -409,6 +411,7 @@ const SENTENCE = {
 // ---------- 4. PARTICLES ----------
 // canvas-only effect: dots fly into letterforms of "buffalo" in three cases.
 const PART = {
+  fx: true,
   dur: 9,
   parts: null,
   targets: null,
@@ -441,7 +444,7 @@ const PART = {
   cols: ['#00e5ff','#ff2bd6','#ffb020'],
   enter() {
     this.init();
-    ov.innerHTML = `<div class="ov-caption">scene · iv · particles · ${b('buffalo')} · click ${b('buffalo')} to install</div>`;
+    ov.innerHTML = `<div class="ov-caption">scene · ii · particles · ${b('buffalo')} · click ${b('buffalo')} to install</div>`;
   },
   render(t) {
     const phaseDur = 2.6;
@@ -480,10 +483,11 @@ const PART = {
 
 // ---------- 5. PLASMA ----------
 const PLASMA = {
+  fx: true,
   dur: 7,
   enter() {
     ov.innerHTML = `
-      <div class="ov-caption">scene · v · plasma · ${b('buffalo')} ${b('buffalo')} ${b('buffalo')}</div>
+      <div class="ov-caption">scene · iii · plasma · ${b('buffalo')} ${b('buffalo')} ${b('buffalo')}</div>
       <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:auto">
         <div id="pl-echo3" style="position:absolute;left:0;right:0;font-family:var(--fd);font-size:144px;letter-spacing:.04em;opacity:.07;mix-blend-mode:screen">${b('BUFFALO')}</div>
         <div id="pl-echo2" style="position:absolute;left:0;right:0;font-family:var(--fd);font-size:144px;letter-spacing:.04em;opacity:.1;mix-blend-mode:screen">${b('BUFFALO')}</div>
@@ -538,6 +542,7 @@ const PLASMA = {
 // surface, rotated XYZ, rendered with a single pre-baked sprite (one drawImage
 // per ball — the demoscene way).
 const VECTORS = {
+  fx: true,
   dur: 8,
   pts: null,
   sprite: null,
@@ -579,7 +584,7 @@ const VECTORS = {
   },
   enter() {
     this.init();
-    ov.innerHTML = `<div class="ov-caption">scene · vi · vector balls · ${b('BUFFALO')} · ${b('BUFFALO')} · ${b('BUFFALO')}</div>`;
+    ov.innerHTML = `<div class="ov-caption">scene · iv · vector balls · ${b('BUFFALO')} · ${b('BUFFALO')} · ${b('BUFFALO')}</div>`;
   },
   render(t) {
     ctx.fillStyle = 'rgba(6,8,13,.45)'; ctx.fillRect(0,0,W,H);
@@ -622,6 +627,7 @@ const VECTORS = {
 
 // ---------- 7. TUNNEL ----------
 const TUNNEL = {
+  fx: true,
   dur: 8,
   rings: null,
   init() {
@@ -632,7 +638,7 @@ const TUNNEL = {
   enter() {
     this.init();
     ov.innerHTML = `
-      <div class="ov-caption">scene · vii · tunnel · ${b('buffalo')}</div>
+      <div class="ov-caption">scene · v · tunnel · ${b('buffalo')}</div>
       <div id="tu-center" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:auto">
         <div id="tu-word" style="font-family:var(--fd);font-size:56px;letter-spacing:.1em;color:#f0f6ff;text-shadow:0 0 16px rgba(255,255,255,.7),0 0 36px rgba(0,229,255,.6);line-height:1">${b('BUFFALO')}</div>
       </div>`;
@@ -675,6 +681,7 @@ const TUNNEL = {
 // fall periodically, ripple outward, dissipate. Grid renders to ImageData,
 // upscales with nearest-neighbor for that 320×200 VGA bite.
 const WAVES = {
+  fx: true,
   dur: 8,
   GW: 256, GH: 144,
   cur: null, prv: null, img: null, tmp: null, tmpCtx: null,
@@ -720,7 +727,7 @@ const WAVES = {
       this.lut[lp+3] = 255;
     }
   },
-  enter() { this.init(); ov.innerHTML = `<div class="ov-caption">scene · viii · wave buffer · ${b('buffalo')} · ${b('buffalo')} · ${b('buffalo')}</div>`; },
+  enter() { this.init(); ov.innerHTML = `<div class="ov-caption">scene · vi · wave buffer · ${b('buffalo')} · ${b('buffalo')} · ${b('buffalo')}</div>`; },
   render(t) {
     const WW = this.GW, HH = this.GH;
     // drop BUFFALO every 1.6s
@@ -770,10 +777,11 @@ const WAVES = {
 
 // ---------- 9. SCROLLER ----------
 const SCROLLER = {
+  fx: true,
   dur: 7,
   enter() {
     ov.innerHTML = `
-      <div class="ov-caption" style="bottom:144px">scene · ix · scroller iii · sine · ${b('buffalo')}</div>`;
+      <div class="ov-caption" style="bottom:144px">scene · vii · scroller iii · sine · ${b('buffalo')}</div>`;
     this.topText  = '· buffalo · buffalo · buffalo · buffalo · buffalo · buffalo · ';
     this.btmText  = '◆ greetings to buffalo, buffalo, BUFFALO & buffalo ◆ greetings to buffalo, buffalo, BUFFALO & buffalo ';
     this.sineText = 'BUFFALO  buffalo  BUFFALO  buffalo  Buffalo  buffalo  BUFFALO  ';
@@ -960,7 +968,9 @@ function enterScene(i) {
   ctx.fillStyle = '#06080d';
   ctx.fillRect(0, 0, W, H);
   if (SCENES[i].enter) try { SCENES[i].enter(); } catch (err) { console.error('[buffalo.asm] scene enter:', err); ov.innerHTML = ''; }
-  $scene.textContent = romans[i + 1] || String(i + 1);
+  const fxRank = SCENES.slice(0, i + 1).filter(s => s.fx).length;
+  if ($sceneRow) $sceneRow.style.visibility = SCENES[i].fx ? '' : 'hidden';
+  if (SCENES[i].fx && $scene) $scene.textContent = romans[fxRank] || String(fxRank);
   $mem.textContent = (0x4042B0 + i * 0x10).toString(16).toUpperCase();
 }
 
@@ -1201,7 +1211,8 @@ function begin() {
   hud.hidden = false;
   // set total scene count in HUD now that SCENES is defined
   const $total = document.getElementById('hud-total');
-  if ($total) $total.textContent = romans[SCENES.length] || String(SCENES.length);
+  const fxTotal = SCENES.filter(s => s.fx).length;
+  if ($total) $total.textContent = romans[fxTotal] || String(fxTotal);
   enterScene(0);
   startAudio();
 }
