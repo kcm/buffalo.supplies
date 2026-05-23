@@ -80,11 +80,12 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
 #hud .fps { bottom: 14px; right: 22px; text-align: right; color: var(--lm); white-space: nowrap; min-width: 200px; }
 #hud .fps b { color: var(--am); font-weight: normal; display: block; }
 #hud-au { text-decoration: underline dotted; color: var(--cy); display: block; cursor: pointer; pointer-events: auto; }
+#hud-mem-btn { pointer-events: auto; cursor: crosshair; }
 #hud .ctrl { bottom: 14px; left: 22px; color: var(--ink-1); white-space: nowrap; }
 #hud .cmd { bottom: 92px; left: 22px; pointer-events: auto; color: var(--ink-2); font-family: var(--fm); font-size: 12px; letter-spacing: .08em; text-transform: none; white-space: nowrap; }
 #hud .cmd a.b { color: var(--lm); }
 #hud .cmd .arrow { color: var(--ink-1); }
-#hud .scr { left: 0; right: 0; bottom: 56px; height: 24px; overflow: hidden; }
+#hud .scr { left: 0; right: 0; bottom: 56px; height: 24px; overflow: hidden; pointer-events: auto; }
 #hud .scr div { display: inline-block; white-space: nowrap; font-family: var(--fd); font-size: 12px; letter-spacing: .22em; color: var(--cy); text-shadow: 0 0 8px var(--cy); animation: scroll 38s linear infinite; }
 @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
@@ -180,9 +181,9 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
       <div class="wm"><a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener" style="pointer-events:auto">b·u·f·f·a·l·o</a><em>. a s m</em></div>
       <div class="sc">scene <span id="hud-scene">i</span> / <span id="hud-total">ix</span><br><i>T+ <span id="hud-t">00:00.00</span></i><br><span id="hud-state" aria-live="polite">► running</span></div>
       <div class="cmd">pip install <a class="b" href="https://github.com/kcm/buffalo-ipsum" target="_blank" rel="noopener">buffalo</a>-ipsum <span class="arrow">→ kcm/buffalo-ipsum</span></div>
-      <div class="fps">FPS <span id="hud-fps">60</span>.00<b>MEM 0x<span id="hud-mem">4042B0</span></b><span id="hud-au" role="button" tabindex="0" aria-label="Toggle audio" title="Toggle audio (M)">— silent</span></div>
+      <div class="fps">FPS <span id="hud-fps">60</span>.00<b id="hud-mem-btn" title="MEM">MEM 0x<span id="hud-mem">4042B0</span></b><span id="hud-au" role="button" tabindex="0" aria-label="Toggle audio" title="Toggle audio (M)">— silent</span></div>
       <div class="ctrl">► click · pause<br>← → · skip · R · restart · M · mute</div>
-      <div class="scr"><div>&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;GREETINGS TO: BUFFALO, BUFFALO, BUFFALO &amp; BUFFALO&nbsp;&nbsp;·&nbsp;&nbsp;buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo&nbsp;&nbsp;·&nbsp;&nbsp;pip install buffalo-ipsum&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;GREETINGS TO: BUFFALO, BUFFALO, BUFFALO &amp; BUFFALO&nbsp;&nbsp;·&nbsp;&nbsp;buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo&nbsp;&nbsp;·&nbsp;&nbsp;pip install buffalo-ipsum&nbsp;&nbsp;·&nbsp;&nbsp;</div></div>
+      <div class="scr"><div>&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;<a href="https://github.com/mtuomi/SecondReality" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">GREETINGS TO: BUFFALO, BUFFALO, BUFFALO &amp; BUFFALO</a>&nbsp;&nbsp;·&nbsp;&nbsp;buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo&nbsp;&nbsp;·&nbsp;&nbsp;<span data-copy="pip install buffalo-ipsum" style="cursor:copy">pip install buffalo-ipsum</span>&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;<a href="https://github.com/mtuomi/SecondReality" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">GREETINGS TO: BUFFALO, BUFFALO, BUFFALO &amp; BUFFALO</a>&nbsp;&nbsp;·&nbsp;&nbsp;buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo&nbsp;&nbsp;·&nbsp;&nbsp;<span data-copy="pip install buffalo-ipsum" style="cursor:copy">pip install buffalo-ipsum</span>&nbsp;&nbsp;·&nbsp;&nbsp;</div></div>
     </div>
 
     <div id="gate" role="button" tabindex="0" aria-label="Start the buffalo.asm demo">
@@ -943,10 +944,26 @@ const SCENE_LABELS = ['boot','title','sentence','particles','plasma','vectors','
 let idx = 0, sceneStart = 0, paused = false, started = false, atEnd = false;
 let frameCount = 0, fpsLast = 0, fps = 60;
 let lastTimerStr = '';
+let _xc = 0, _xb = false, _xt = 0;
+
+function _x1() {
+  _xb = true; _xt = performance.now() / 1000;
+  paused = false; $st.textContent = '► running'; $st.className = '';
+  ov.innerHTML = '';
+  if (audioCtx && audioGain) audioGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.08);
+}
+function _x0() {
+  _xb = false; _xc = 0; $mem.style.color = '';
+  $st.textContent = '► running'; $st.className = '';
+  if (!audioMuted && audioCtx && audioGain) audioGain.gain.setTargetAtTime(0.6, audioCtx.currentTime, 0.1);
+}
+const _d = s => s.replace(/[a-zA-Z]/g, c => { const b = c < 'a' ? 65 : 97; return String.fromCharCode((c.charCodeAt(0) - b + 13) % 26 + b); }); // triple-rot13
 
 function enterScene(i) {
   idx = i;
   sceneStart = performance.now() / 1000;
+  _xc = 0;
+  if (!_xb) $mem.style.color = '';
   // HARD clear canvas on every scene transition — no leakage from previous scene
   ctx.globalAlpha = 1;
   ctx.fillStyle = '#06080d';
@@ -965,7 +982,7 @@ function loop(now) {
   const t = now / 1000;
   const dt = lastT ? t - lastT : 0;
   lastT = t;
-  if (!paused && started) {
+  if (!paused && started && !_xb) {
     let localT = t - sceneStart;
     if (localT >= SCENES[idx].dur) {
       if (idx === SCENES.length - 1) {
@@ -990,6 +1007,70 @@ function loop(now) {
     frameCount++;
     if (now - fpsLast > 500) { fps = Math.round(frameCount * 1000 / (now - fpsLast)); $fps.textContent = String(fps).padStart(2,'0'); fpsLast = now; frameCount = 0; }
   }
+
+  if (_xb) {
+    const ct = performance.now() / 1000 - _xt;
+    const addr = (0x41414100 + ((Math.floor(ct * 220) * 0x41) & 0xFFFF)) & 0xFFFFFF;
+    $mem.textContent = addr.toString(16).toUpperCase().padStart(6, '0');
+    $mem.style.color = '#ff3850';
+    const _g = () => String.fromCharCode(0x41 + (Math.random() * 26 | 0));
+    $scene.textContent = _g() + _g();
+    $t.textContent = `${_g()}${_g()}:${_g()}${_g()}.${_g()}${_g()}`;
+    $st.textContent = Array.from({length: 8}, _g).join('');
+    $st.className = '';
+    if (ct > 0.2 && ct < 1.4) {
+      const density = Math.min(1, (ct - 0.2) / 0.4);
+      for (let i = 0; i < 70 * density | 0; i++) {
+        ctx.fillStyle = Math.random() > 0.55 ? '#ff3850' : '#a3ff12';
+        const rx = Math.random() * W | 0, ry = Math.random() * H | 0;
+        ctx.fillRect(rx, ry, (Math.random() * 220 + 2) | 0, Math.random() > 0.75 ? 10 : 2);
+      }
+    }
+    if (ct > 1.4) {
+      const mono = '"JetBrains Mono",ui-monospace,monospace';
+      const vt = '"VT323",monospace';
+      ctx.save();
+      ctx.fillStyle = 'rgba(6,8,13,0.94)'; ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+      const pulse = 0.75 + 0.25 * Math.sin(ct * 4.2);
+      ctx.textAlign = 'center';
+      ctx.font = `96px ${vt}`;
+      ctx.shadowColor = '#a3ff12'; ctx.shadowBlur = 28 * pulse;
+      ctx.fillStyle = `rgba(163,255,18,${pulse})`;
+      ctx.fillText(_d('UNPX GUR OHSSNYB'), W / 2, 130);
+      ctx.font = `28px ${vt}`;
+      ctx.shadowBlur = 12 * pulse;
+      ctx.fillStyle = `rgba(163,255,18,${pulse * 0.7})`;
+      ctx.fillText(_d('unpx gur cynarg  ·  1995  ·  unpx gur cynarg'), W / 2, 164);
+      ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+
+      ctx.textAlign = 'left';
+      ctx.font = `bold 22px ${mono}`; ctx.fillStyle = '#ff3850';
+      ctx.fillText(_d('Frtzragngvba snhyg (pber qhzcrq)'), 80, 224);
+
+      ctx.font = `14px ${mono}`; ctx.fillStyle = '#9aaecb';
+      ctx.fillText(_d('ohssnyb[0k1337]: fvtany 11 (FVTFRTI), nqqerff 0k41414141'), 80, 264);
+      ctx.fillText(_d('RVC 0k41414141  ROC 0k41414141  RFC 0kosssq3o8'), 80, 284);
+      ctx.fillText(_d('RNK 0kqrnqorrs  RPK 0k00000000  RQK 0kosssq3p4'), 80, 304);
+      ctx.fillText(_d('*** fgnpx fznfuvat qrgrpgrq ***  ohssnyb grezvangrq'), 80, 324);
+      ctx.fillStyle = '#7b6cf6';
+      ctx.fillText(_d("lbh'er va gur ohggre mbar abj, onol"), 80, 344);
+
+      ctx.fillStyle = '#a3ff12'; ctx.font = `13px ${mono}`;
+      const buf = _d('ohssnyb ').repeat(18);
+      ctx.fillText(buf, 80, 384);
+      ctx.fillText(buf, 80, 400);
+      ctx.fillText(buf, 80, 416);
+
+      ctx.fillStyle = '#5b6c86';
+      ctx.fillText(_d('Pber svyr jevggra. Qrsnhyg ybpngvba: ./pber'), 80, 460);
+      ctx.fillText(_d('cerff E (be pyvpx) gb erobbg ohssnyb.nfz'), 80, 480);
+
+      ctx.restore();
+    }
+  }
+
   requestAnimationFrame(loop);
 }
 requestAnimationFrame((n) => { fpsLast = n; loop(n); });
@@ -1153,7 +1234,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ') { e.preventDefault(); paused = !paused; $st.textContent = paused ? '■ paused' : '► running'; $st.className = paused ? 'p' : ''; setAudioPaused(paused); }
   else if (e.key === 'ArrowRight') { atEnd = false; next(); }
   else if (e.key === 'ArrowLeft')  { atEnd = false; prev(); }
-  else if (e.key === 'r' || e.key === 'R') { atEnd = false; restart(); }
+  else if (e.key === 'r' || e.key === 'R') { if (_xb) _x0(); atEnd = false; restart(); }
   else if (e.key === 'm' || e.key === 'M') { toggleMute(); }
 });
 
@@ -1167,11 +1248,23 @@ function toggleMute() {
 $au.addEventListener('click', (e) => { e.stopPropagation(); toggleMute(); });
 $au.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleMute(); } });
 
+document.getElementById('hud-mem-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!started || _xb) return;
+  _xc++;
+  if      (_xc === 1) $mem.style.color = 'var(--am)';
+  else if (_xc === 2) $mem.style.color = 'var(--rd)';
+  else if (_xc >= 3)  _x1();
+});
+
 // Click on stage (but not on a link) toggles pause
 stage.addEventListener('click', (e) => {
   if (!started) return;
   if (e.target.closest('a')) return;          // don't intercept links
   if (e.target.closest('#gate')) return;
+  if (e.target.closest('#hud-mem-btn')) return;
+  if (e.target.closest('[data-copy]')) return;
+  if (_xb) { _x0(); atEnd = false; restart(); return; }
   if (atEnd) { atEnd = false; restart(); return; }
   paused = !paused;
   $st.textContent = paused ? '■ paused' : '► running';
