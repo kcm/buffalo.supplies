@@ -929,10 +929,16 @@ const SCENES = [BOOT, TITLE, SENTENCE, PART, PLASMA, VECTORS, TUNNEL, WAVES, SCR
 let idx = 0, sceneStart = 0, paused = false, started = false, atEnd = false;
 let frameCount = 0, fpsLast = 0, fps = 60;
 let lastTimerStr = '';
-let _xc = 0, _xb = false, _xt = 0;
+let _xc = 0, _xb = false, _xt = 0, _xbz = '';
+const _bzLines = [
+  "lbh'er va gur ohggre mbar abj, onol",
+  "yrg'f rpub 23, frr jung'f hc",
+  "evfp nepuvgrpgher vf tbvat gb punatr rirelguvat",
+];
 
 function _x1() {
   _xb = true; _xt = performance.now() / 1000;
+  _xbz = _bzLines[Math.floor(Math.random() * _bzLines.length)];
   paused = false; $st.textContent = '► running'; $st.className = '';
   ov.innerHTML = '';
   if (audioCtx && audioGain) audioGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.08);
@@ -1041,7 +1047,7 @@ function loop(now) {
       ctx.fillText(_d('RNK 0kqrnqorrs  RPK 0k00000000  RQK 0kosssq3p4'), 80, 304);
       ctx.fillText(_d('*** fgnpx fznfuvat qrgrpgrq ***  ohssnyb grezvangrq'), 80, 324);
       ctx.fillStyle = '#7b6cf6';
-      ctx.fillText(_d("lbh'er va gur ohggre mbar abj, onol"), 80, 344);
+      ctx.fillText(_d(_xbz), 80, 344);
 
       ctx.fillStyle = '#a3ff12'; ctx.font = `13px ${mono}`;
       const buf = _d('ohssnyb ').repeat(18);
