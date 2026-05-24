@@ -121,12 +121,12 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
 #yt { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
 /* ----------------------------------------------------------
-   Reduced-motion poster: respect users who can't or don't want
-   90 seconds of flashing copper bars + plasma + chromatic strobe.
-   Hides the stage entirely; shows a static page instead.
+   Poster fallback: shown when the demo can't run well —
+   reduced-motion users, or touch-only devices (the demo is
+   1280×720 with keyboard controls; phones get a static page).
    --------------------------------------------------------- */
 #reduced { display: none; }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce), (hover: none) and (pointer: coarse) {
   #frame { display: none; }
   #reduced {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
@@ -142,14 +142,25 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
   }
   #reduced .asm { font-family: var(--ft); font-size: clamp(20px, 5vw, 32px); letter-spacing: .4em; color: var(--ink-3); }
   #reduced .install {
-    margin-top: 14px; padding: 14px 22px; background: var(--void-1); border: 1px solid var(--ink-1);
+    margin-top: 14px; padding: 16px 22px; background: var(--void-1); border: 1px solid var(--ink-1);
     font-family: var(--fm); font-size: clamp(14px, 2.4vw, 18px); color: var(--lm); letter-spacing: .04em;
     cursor: pointer; user-select: all;
+    min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  }
+  #reduced .repo {
+    margin-top: 4px; font-family: var(--fm); font-size: 12px; letter-spacing: .25em; color: var(--cy);
+    text-transform: uppercase; text-decoration: none;
+    padding: 12px 18px; min-height: 44px; display: inline-flex; align-items: center;
   }
   #reduced .meta { margin-top: 14px; font-family: var(--fm); font-size: 11px; letter-spacing: .3em; color: var(--ink-1); text-transform: uppercase; line-height: 1.8; max-width: 560px; }
   #reduced a.b { color: var(--lm); }
-  #reduced .force { margin-top: 28px; font-family: var(--fm); font-size: 10px; letter-spacing: .25em; color: var(--ink-1); text-transform: uppercase; }
-  #reduced .force a { color: var(--cy); cursor: pointer; pointer-events: auto; }
+  #reduced .force {
+    margin-top: 28px;
+    background: none; border: 1px solid var(--ink-1);
+    padding: 12px 20px; min-height: 44px;
+    font-family: var(--fm); font-size: 10px; letter-spacing: .25em; color: var(--cy);
+    text-transform: uppercase; cursor: pointer;
+  }
 }
 </style>
 </head>
@@ -165,11 +176,12 @@ a.b:focus-visible { outline: 1px dashed var(--mg); outline-offset: 3px; }
   <div class="big">buffalo</div>
   <div class="asm">. a s m</div>
   <div class="install" onclick="navigator.clipboard&&navigator.clipboard.writeText('pip install buffalo-ipsum').then(()=>{this.textContent='✓ copied  ·  pip install buffalo-ipsum'});">pip install buffalo-ipsum &nbsp;—&nbsp; tap to copy</div>
+  <a class="repo" href="https://github.com/kcm/buffalo-ipsum">→ github.com/kcm/buffalo-ipsum</a>
   <div class="meta">
     a 64k demoscene intro for the python package <a class="b" href="https://github.com/kcm/buffalo-ipsum">buffalo-ipsum</a><br>
-    motion-reduced view · the full demo is animation-heavy
+    the full demo runs at 1280×720 with keyboard controls — best on desktop
   </div>
-  <div class="force"><button onclick="document.getElementById('reduced').style.display='none';document.getElementById('frame').style.display='grid';" style="background:none;border:none;padding:0;font:inherit;color:var(--cy);cursor:pointer;text-transform:uppercase;letter-spacing:.25em;font-size:10px">play the demo anyway →</button></div>
+  <button class="force" onclick="document.getElementById('reduced').style.display='none';document.getElementById('frame').style.display='grid';">play the demo anyway →</button>
 </div>
 
 <div id="frame">
